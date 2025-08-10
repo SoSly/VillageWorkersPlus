@@ -10,21 +10,32 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.sosly.vwp.blocks.Blocks;
+import org.sosly.vwp.config.CommonConfig;
+import org.sosly.vwp.entities.EntityTypes;
+import org.sosly.vwp.gui.Menus;
+import org.sosly.vwp.items.Items;
 
-@Mod(VillageWorkersPlus.MODID)
+@Mod(VillageWorkersPlus.MOD_ID)
 public class VillageWorkersPlus {
-    public static final String MODID = "vwp";
+    public static final String MOD_ID = "vwp";
     public static final Logger LOGGER = LogManager.getLogger();
 
     public VillageWorkersPlus() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        // Register all deferred registers
+        Blocks.BLOCKS.register(modEventBus);
+        EntityTypes.ENTITY_TYPES.register(modEventBus);
+        Items.ITEMS.register(modEventBus);
+        Menus.MENUS.register(modEventBus);
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
 
         // Register config
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);

@@ -1,36 +1,25 @@
 # Village Workers Plus
 
-An expansion mod for the Villager Workers mod that adds new professions and infrastructure systems to make your 
-villages feel more alive and interconnected.
+Adds new villager professions and infrastructure systems to make your villages feel more alive and interconnected.
 
-## Features (Planned)
+## Features
+- New professions for worker
 
-### New Professions
-- **Couriers**: Transport items between workers and storage locations
-- **Cooks**: Process raw food into prepared meals at kitchen workstations  
-- **Bankers/Storekeepers**: Manage central village storage and handle requests
-- **Enhanced Guards**: Improved combat AI and equipment management
+## Planned
+- Additional professions: Cooks, Bankers/Storekeepers, Craftsmen
+- New infrastructure: Warehouses, Markets, and Request Boards
+- Integration with Villager Comfort
+- Economy system with workers paying one another for services
 
-### Systems
-- Central storage system for village resources
-- Request board for player-villager interactions
-- Item logistics network between professions
+## New Professions
 
-## Dependencies
+### Porters
+Porters act as the logistical link in your village, delivering resources between other workers.
 
-- Minecraft 1.20.1
-- Forge 47.1.100+
-- [Villager Workers](https://www.curseforge.com/minecraft/mc-mods/workers) 1.7+
-
-## Development
-
-This mod is currently in early development. Features and APIs are subject to change.
-
-## License
-
-GPLv3 - See LICENSE file for details
-
-## Credits
-
-- talhanation for the original Villager Workers mod
-- nivthefox for Village Workers Plus
+- Must be assigned to a chest to begin working.
+- Scans up to 80 blocks to find other workers.
+- Can remember up to 16 workers (capacity increases with equipment).
+- Once acquainted with another worker, they will:
+    1. Visit them regularly to check needs.
+    2. Deliver items from their assigned chest to the worker’s chest.
+- Hireable from Level 2+ Cartographer villagers via the Porter Workstation.

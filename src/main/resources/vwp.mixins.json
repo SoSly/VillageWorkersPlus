@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "vwp.refmap.json",
   "mixins": [
+    "VillagerTestAccessMixin"
   ],
   "client": [
   ],

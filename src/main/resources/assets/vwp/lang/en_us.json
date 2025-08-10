@@ -1,3 +1,14 @@
 {
-  "itemGroup.vwp": "Village Workers Plus"
+  "block.vwp.porter_block": "Porter Workstation",
+  "item.vwp.porter_block": "Porter Workstation",
+  "item.vwp.porter_spawn_egg": "Porter Spawn Egg",
+  "entity.vwp.porter": "Porter",
+  
+  "config.vwp.enablePorters": "Enable Porters",
+  "config.vwp.porterHireCost": "Porter Hire Cost",
+  "config.vwp.porterMaxMemory": "Porter Max Memory",
+  "config.vwp.porterScanRadius": "Porter Scan Radius",
+  "config.vwp.porterChatDistance": "Porter Chat Distance",
+  "config.vwp.porterIntroductionTime": "Porter Introduction Time",
+  "config.vwp.porterVisitInterval": "Porter Visit Interval"
 }
