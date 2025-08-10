@@ -1,4 +1,4 @@
-package org.sosly.vwp.events.villager;
+package org.sosly.vwp.events.trades;
 
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.npc.VillagerTrades;
@@ -13,7 +13,7 @@ import org.sosly.vwp.items.Items;
 import java.util.List;
 
 @Mod.EventBusSubscriber(modid = VillageWorkersPlus.MOD_ID)
-public class CartographerTrades extends VillageWorkersPlusTrades {
+public class Cartographer {
     static Item EMERALD = net.minecraft.world.item.Items.EMERALD;
     
     @SubscribeEvent

@@ -1,15 +1,22 @@
 package org.sosly.vwp.items;
 
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.common.ForgeSpawnEggItem;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import org.sosly.vwp.VillageWorkersPlus;
 import org.sosly.vwp.blocks.Blocks;
 import org.sosly.vwp.entities.EntityTypes;
+import org.sosly.vwp.entities.workers.Porter;
 
+@Mod.EventBusSubscriber(modid = VillageWorkersPlus.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Items {
     public static final DeferredRegister<Item> ITEMS = 
             DeferredRegister.create(ForgeRegistries.ITEMS, VillageWorkersPlus.MOD_ID);
@@ -19,4 +26,11 @@ public class Items {
     
     public static final RegistryObject<Item> PORTER_SPAWN_EGG = ITEMS.register("porter_spawn_egg",
             () -> new ForgeSpawnEggItem(EntityTypes.PORTER, 0x8B4513, 0xFFD700, new Item.Properties()));
+
+    @SubscribeEvent
+    public static void onCreativeModeTabContent(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey().equals(CreativeModeTabs.SPAWN_EGGS)) {
+            event.accept(PORTER_SPAWN_EGG.get());
+        }
+    }
 }

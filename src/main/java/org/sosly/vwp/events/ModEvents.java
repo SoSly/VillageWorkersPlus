@@ -8,7 +8,7 @@ import org.sosly.vwp.entities.EntityTypes;
 import org.sosly.vwp.entities.workers.Porter;
 
 @Mod.EventBusSubscriber(modid = VillageWorkersPlus.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
-public class EntityAttributeHandler {
+public class ModEvents {
     
     @SubscribeEvent
     public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
