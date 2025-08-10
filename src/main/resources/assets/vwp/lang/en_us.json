@@ -15,5 +15,15 @@
   "chat.vwp.porter.meeting_new_worker": "I'm going to meet a new worker!",
   "chat.vwp.porter.met_worker": "I met %s!",
   "chat.vwp.porter.havent_seen_worker": "I haven't seen %s in a while...",
-  "chat.vwp.porter.wondering_about_worker": "I wonder how %s is doing..."
+  "chat.vwp.porter.wondering_about_worker": "I wonder how %s is doing...",
+  
+  "chat.vwp.porter.worker_needs_items": "%s needs %s. I'll get it for them!",
+  "chat.vwp.porter.no_chest": "I don't have a chest assigned to me!",
+  "chat.vwp.porter.cant_find_chest": "I can't find my chest!",
+  "chat.vwp.porter.found_items_for_worker": "Got supplies for %s!",
+  "chat.vwp.porter.no_items_for_worker": "I don't have what %s needs in my chest.",
+  "chat.vwp.porter.cant_find_worker_chest": "I can't find %s's chest!",
+  "chat.vwp.porter.delivered_items": "Delivered supplies to %s!",
+  
+  "config.vwp.porterMinFoodDelivery": "Porter Min Food Delivery"
 }

@@ -40,6 +40,10 @@ public class CommonConfig {
             .comment("Whether the Porter announces what they're doing (meeting workers, checking on them, etc.)")
             .define("porterIsChatty", true);
 
+    private static final ForgeConfigSpec.IntValue PORTER_MIN_FOOD_DELIVERY = BUILDER
+            .comment("Minimum food items Porter tries to maintain for each worker")
+            .defineInRange("porterMinFoodDelivery", 10, 1, 64);
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static boolean enablePorters;
@@ -50,6 +54,7 @@ public class CommonConfig {
     public static int porterIntroductionTime;
     public static int porterVisitInterval;
     public static boolean porterIsChatty;
+    public static int porterMinFoodDelivery;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -61,6 +66,7 @@ public class CommonConfig {
         porterIntroductionTime = PORTER_INTRODUCTION_TIME.get();
         porterVisitInterval = PORTER_VISIT_INTERVAL.get();
         porterIsChatty = PORTER_IS_CHATTY.get();
+        porterMinFoodDelivery = PORTER_MIN_FOOD_DELIVERY.get();
     }
 
     public static int getPorterMemoryCapacity(boolean hasBook, boolean hasFeather, boolean hasInk) {

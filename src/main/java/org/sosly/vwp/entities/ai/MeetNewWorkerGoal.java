@@ -62,10 +62,7 @@ public class MeetNewWorkerGoal extends Goal {
         introductionStartTime = 0;
         isIntroducing = false;
         
-        // Send message to owner if they exist and porter is chatty
-        if (CommonConfig.porterIsChatty && porter.getOwner() != null) {
-            porter.tellPlayer(porter.getOwner(), Component.translatable("chat.vwp.porter.meeting_new_worker"));
-        }
+        porter.chat(Component.translatable("chat.vwp.porter.meeting_new_worker"));
         porter.getNavigation().moveTo(targetWorker, 1.0D);
     }
     
@@ -74,17 +71,9 @@ public class MeetNewWorkerGoal extends Goal {
         if (isIntroducing && targetWorker != null) {
             UUID workerId = targetWorker.getUUID();
             String workerName = targetWorker.getName().getString();
-            // Get the worker's work position (where they're supposed to be working)
             net.minecraft.core.BlockPos workerWorkPos = targetWorker.getStartPos();
             porter.addKnownWorker(workerId, workerName, workerWorkPos);
-            
-            // Send message to owner about successful meeting (if chatty)
-            if (CommonConfig.porterIsChatty && porter.getOwner() != null) {
-                porter.tellPlayer(porter.getOwner(), 
-                    Component.translatable("chat.vwp.porter.met_worker", workerName));
-            }
-            
-            // Head back to work position if we have one
+            porter.chat(Component.translatable("chat.vwp.porter.met_worker", workerName));
             if (porter.getStartPos() != null) {
                 porter.getNavigation().moveTo(porter.getStartPos().getX() + 0.5, 
                                              porter.getStartPos().getY(), 
@@ -114,8 +103,7 @@ public class MeetNewWorkerGoal extends Goal {
             }
             
             porter.getLookControl().setLookAt(targetWorker, 10.0F, (float)porter.getMaxHeadXRot());
-            
-            // Check if enough time has passed since we started introducing
+
             long currentTime = porter.level().getGameTime();
             long timeSpent = currentTime - introductionStartTime;
             
