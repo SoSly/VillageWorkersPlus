@@ -30,11 +30,15 @@ public class CommonConfig {
 
     private static final ForgeConfigSpec.IntValue PORTER_INTRODUCTION_TIME = BUILDER
             .comment("Time in seconds for a Porter to introduce themselves to a new worker")
-            .defineInRange("porterIntroductionTime", 30, 5, 120);
+            .defineInRange("porterIntroductionTime", 5, 2, 30);
 
     private static final ForgeConfigSpec.IntValue PORTER_VISIT_INTERVAL = BUILDER
             .comment("Time in minutes between Porter visits to each known worker")
             .defineInRange("porterVisitInterval", 5, 1, 60);
+
+    private static final ForgeConfigSpec.BooleanValue PORTER_IS_CHATTY = BUILDER
+            .comment("Whether the Porter announces what they're doing (meeting workers, checking on them, etc.)")
+            .define("porterIsChatty", true);
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
@@ -45,6 +49,7 @@ public class CommonConfig {
     public static int porterChatDistance;
     public static int porterIntroductionTime;
     public static int porterVisitInterval;
+    public static boolean porterIsChatty;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
@@ -55,6 +60,7 @@ public class CommonConfig {
         porterChatDistance = PORTER_CHAT_DISTANCE.get();
         porterIntroductionTime = PORTER_INTRODUCTION_TIME.get();
         porterVisitInterval = PORTER_VISIT_INTERVAL.get();
+        porterIsChatty = PORTER_IS_CHATTY.get();
     }
 
     public static int getPorterMemoryCapacity(boolean hasBook, boolean hasFeather, boolean hasInk) {

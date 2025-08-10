@@ -10,5 +10,10 @@
   "config.vwp.porterScanRadius": "Porter Scan Radius",
   "config.vwp.porterChatDistance": "Porter Chat Distance",
   "config.vwp.porterIntroductionTime": "Porter Introduction Time",
-  "config.vwp.porterVisitInterval": "Porter Visit Interval"
+  "config.vwp.porterVisitInterval": "Porter Visit Interval",
+  
+  "chat.vwp.porter.meeting_new_worker": "I'm going to meet a new worker!",
+  "chat.vwp.porter.met_worker": "I met %s!",
+  "chat.vwp.porter.havent_seen_worker": "I haven't seen %s in a while...",
+  "chat.vwp.porter.wondering_about_worker": "I wonder how %s is doing..."
 }
