@@ -11,6 +11,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import org.sosly.vwp.VillageWorkersPlus;
 import org.sosly.vwp.networking.serverbound.OpenHireGUI;
 import org.sosly.vwp.networking.clientbound.UpdateHireScreen;
+import org.sosly.vwp.networking.serverbound.OpenWorkerGUI;
 
 import java.util.function.Supplier;
 
@@ -31,6 +32,8 @@ public class PacketHandler {
 
         // Register server-bound packets
         registerMessage(packetId++, OpenHireGUI.class);
+        registerMessage(packetId++, OpenWorkerGUI.class);
+        // Register client-bound packets
         registerMessage(packetId++, UpdateHireScreen.class);
     }
 

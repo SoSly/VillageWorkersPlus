@@ -29,9 +29,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sosly.vwp.VillageWorkersPlus;
 import org.sosly.vwp.gui.providers.HireProvider;
+import org.sosly.vwp.gui.providers.WorkerProvider;
 import org.sosly.vwp.networking.PacketHandler;
 import org.sosly.vwp.networking.clientbound.UpdateHireScreen;
 import org.sosly.vwp.networking.serverbound.OpenHireGUI;
+import org.sosly.vwp.networking.serverbound.OpenWorkerGUI;
 
 import java.util.List;
 import java.util.Objects;
@@ -100,12 +102,10 @@ public class Porter extends AbstractWorkerEntity {
     public void openHireGUI(Player player) {
         this.navigation.stop();
         if (!(player instanceof ServerPlayer serverPlayer)) {
-            VillageWorkersPlus.LOGGER.info("Porter hire GUI opened on client side, sending to server.");
             PacketHandler.network.sendToServer(new OpenHireGUI(player, this.getUUID()));
             return;
         }
 
-        VillageWorkersPlus.LOGGER.info("Porter hire GUI opened on server side for player: " + player.getName().getString());
         PacketHandler.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer)player), new UpdateHireScreen(CommandEvents.getWorkersCurrency(), this.getWorkerCost()));
         Consumer<FriendlyByteBuf> extraDataWriter = (packetBuffer) -> packetBuffer.writeUUID(this.getUUID());
         NetworkHooks.openScreen(serverPlayer, new HireProvider<Porter>(Porter.this), extraDataWriter);
@@ -113,7 +113,14 @@ public class Porter extends AbstractWorkerEntity {
 
     @Override
     public void openGUI(Player player) {
-        throw new RuntimeException("Porter does not support openGUI method, yet");
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            VillageWorkersPlus.LOGGER.info("Porter inventory GUI opened on client side, sending to server.");
+            PacketHandler.network.sendToServer(new OpenWorkerGUI(player, this.getUUID()));
+            return;
+        }
+
+        Consumer<FriendlyByteBuf> extraDataWriter = (packetBuffer) -> packetBuffer.writeUUID(this.getUUID());
+        NetworkHooks.openScreen(serverPlayer, new WorkerProvider<Porter>(Porter.this), extraDataWriter);
     }
 
     @Nullable

@@ -6,7 +6,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 
 public class HireContainer extends WorkerHireContainer {
-    public HireContainer(int id, Player playerEntity, AbstractWorkerEntity worker, Inventory playerInventory) {
-        super(id, playerEntity, worker, playerInventory);
+    public HireContainer(int id, Player player, AbstractWorkerEntity worker, Inventory inv) {
+        super(id, player, worker, inv);
     }
 }
