@@ -1,0 +1,12 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "workersplus:block/porter_block_bottom",
+    "up": "workersplus:block/porter_block_top",
+    "north": "workersplus:block/porter_block_side",
+    "south": "workersplus:block/porter_block_side",
+    "west": "workersplus:block/porter_block_side",
+    "east": "workersplus:block/porter_block_side",
+    "particle": "workersplus:block/porter_block_top"
+  }
+}

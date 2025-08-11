@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "workersplus:block/porter_block" }
+  }
+}

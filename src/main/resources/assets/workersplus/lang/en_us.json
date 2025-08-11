@@ -1,0 +1,14 @@
+{
+  "block.workersplus.porter_block": "Porter Workstation",
+  "item.workersplus.porter_block": "Porter Workstation",
+  "item.workersplus.porter_spawn_egg": "Porter Spawn Egg",
+  "entity.workersplus.porter": "Porter",
+
+  "chat.workersplus.assess_worker_needs.success": "%s needs supplies. Let me go see if I have what they need.",
+  "chat.workersplus.meet_new_worker.start": "I see someone new!  I should go say hello.",
+  "chat.workersplus.meet_new_worker.end": "I learned a little about %s.",
+  "chat.workersplus.selecting_worker.success": "I wonder how %s is doing...",
+  "chat.workersplus.put_items_in_container.success": "I put %d %s in the chest.",
+
+  "need.workersplus.food": "Food"
+}

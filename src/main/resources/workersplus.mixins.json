@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "org.sosly.workersplus.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "workersplus.refmap.json",
+  "mixins": [
+    "VillagerTestAccessMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

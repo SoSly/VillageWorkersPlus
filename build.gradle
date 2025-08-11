@@ -65,7 +65,7 @@ minecraft {
             property 'mixin.env.remapRefMap', 'true'
             property 'mixin.env.refMapRemappingFile', "${buildDir}/createSrgToMcp/output.srg"
             property 'forge.enabledGameTestNamespaces', "${mod_id}"
-            arg '-mixin.config=vwp.mixins.json'
+            arg "-mixin.config=${mod_id}.mixins.json"
 
             mods {
                 "${mod_id}" {
@@ -137,7 +137,7 @@ tasks.withType(ProcessResources).configureEach {
 }
 
 mixin {
-    add sourceSets.main, "vwp.refmap.json"
+    add sourceSets.main, "${mod_id}.refmap.json"
 }
 
 tasks.named('jar', Jar).configure {
@@ -150,7 +150,7 @@ tasks.named('jar', Jar).configure {
                 'Implementation-Version'  : project.jar.archiveVersion,
                 'Implementation-Vendor'   : mod_authors,
                 'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-                'MixinConfigs': 'vwp.mixins.json',
+                'MixinConfigs': "${mod_id}.mixins.json",
         ])
     }
 
