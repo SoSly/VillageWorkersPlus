@@ -4,6 +4,8 @@ import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.goal.Goal;
 import org.sosly.workersplus.VillageWorkersPlus;
+import org.sosly.workersplus.config.CommonConfig;
+import org.sosly.workersplus.data.WorkerInfo;
 import org.sosly.workersplus.data.WorkerRelationships;
 import org.sosly.workersplus.tasks.AbstractTask;
 import org.sosly.workersplus.utils.Chat;
@@ -55,28 +57,41 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
     public void start() {
         long currentTime = worker.level().getGameTime();
         
-        List<AbstractWorkerEntity> availableWorkers = relationships.getRelationships()
+        List<UUID> knownWorkerIds = relationships.getRelationships()
                 .keySet()
                 .stream()
                 .filter(uuid -> !uuid.equals(worker.getUUID()))
                 .filter(uuid -> !useRecencyCheck || !isRecentlySelected(uuid, currentTime))
-                .map(uuid -> {
-                    AbstractWorkerEntity entity = (AbstractWorkerEntity) worker.getServer().overworld().getEntity(uuid);
-                    if (!Worker.canWork(entity)) {
-                        return null;
-                    }
-
-                    return entity;
-                })
-                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        if (availableWorkers.isEmpty()) {
+        if (knownWorkerIds.isEmpty()) {
             getTask().reset();
             return;
         }
 
-        AbstractWorkerEntity target = availableWorkers.get(worker.getRandom().nextInt(availableWorkers.size()));
+        AbstractWorkerEntity target = null;
+        UUID selectedId = null;
+        
+        while (!knownWorkerIds.isEmpty() && target == null) {
+            selectedId = knownWorkerIds.get(worker.getRandom().nextInt(knownWorkerIds.size()));
+            
+            AbstractWorkerEntity entity = (AbstractWorkerEntity) worker.getServer().overworld().getEntity(selectedId);
+            
+            if (entity != null && entity.isAlive() && 
+                worker.distanceToSqr(entity) <= CommonConfig.workerDetectionRadius * CommonConfig.workerDetectionRadius) {
+                if (Worker.canWork(entity)) {
+                    target = entity;
+                }
+            } else {
+                WorkerInfo forgottenWorker = relationships.getRelationships().get(selectedId);
+                if (forgottenWorker != null) {
+                    Chat.send(worker, Component.translatable("chat.workersplus.selecting_worker.failure", forgottenWorker.getName()));
+                    relationships.removeKnown(selectedId);
+                }
+                knownWorkerIds.remove(selectedId);
+            }
+        }
+
         if (target == null) {
             getTask().reset();
             return;

@@ -175,7 +175,7 @@ public class Porter extends AbstractWorkerEntity {
     public static AttributeSupplier.Builder createAttributes() {
         return AbstractWorkerEntity.createLivingAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.35D)
+                .add(Attributes.MOVEMENT_SPEED, 0.3D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D);
     }
 }
