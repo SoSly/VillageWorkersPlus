@@ -1,44 +1,117 @@
 package org.sosly.vwp.tasks;
 
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.ai.goal.Goal;
+import org.sosly.vwp.VillageWorkersPlus;
 
-public abstract class AbstractTask {
+import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.Optional;
+
+public abstract class AbstractTask<S extends Enum<S> & TaskState> {
+    private final S[] states;
+    protected int step = -1;
     protected long stateStartTime;
-    protected long lastUpdateTime;
-    
-    public AbstractTask() {
-        this.stateStartTime = 0;
-        this.lastUpdateTime = 0;
+    protected long taskStartTime;
+
+    private final String CURRENT_STEP = "CurrentStep";
+    private final String STATE_START_TIME = "StateStartTime";
+    private final String TASK_START_TIME = "TaskStartTime";
+
+    public AbstractTask(Class<S> stateClass) {
+        this.states = stateClass.getEnumConstants();
     }
-    
-    public void markStateStart(long gameTime) {
-        this.stateStartTime = gameTime;
+
+    // ------------------------
+    // Step navigation
+    // ------------------------
+    public void next() {
+        step++;
+        stateStartTime = System.currentTimeMillis();
     }
-    
-    public long getTimeInState(long currentTime) {
-        if (stateStartTime == 0) {
-            return 0;
+
+    public void previous() {
+        step--;
+        stateStartTime = System.currentTimeMillis();
+    }
+
+    @Nullable
+    public TaskState.Step current() {
+        if (step < 0 || step >= states.length) {
+            return null;
         }
-        return currentTime - stateStartTime;
+        return states[step].getStep();
     }
-    
-    public void update(long gameTime) {
-        this.lastUpdateTime = gameTime;
+
+    public boolean isCurrentStep(Goal goal) {
+        if (step < 0 || step >= states.length) {
+            return false;
+        }
+        return Objects.requireNonNull(current()).isGoal(goal);
     }
-    
-    public abstract void reset();
-    
-    public abstract void save(CompoundTag tag);
-    
-    public abstract void load(CompoundTag tag);
-    
-    protected void saveBaseData(CompoundTag tag) {
-        tag.putLong("StateStartTime", stateStartTime);
-        tag.putLong("LastUpdateTime", lastUpdateTime);
+
+    public boolean complete() {
+        return step >= states.length;
     }
-    
-    protected void loadBaseData(CompoundTag tag) {
-        stateStartTime = tag.getLong("StateStartTime");
-        lastUpdateTime = tag.getLong("LastUpdateTime");
+
+    public <T> T currentData(Class<T> type) {
+        return Objects.requireNonNull(current()).getData(this, type);
     }
+
+    public void start() {
+        taskStartTime = System.currentTimeMillis();
+        stateStartTime = taskStartTime;
+        step = 0; // Reset to the first step
+    }
+
+    // ------------------------
+    // Timing
+    // ------------------------
+    public long getStateStartTime() {
+        return stateStartTime;
+    }
+
+    public long getTimeInState() {
+        long currentTime = System.currentTimeMillis();
+        return (stateStartTime > 0) ? currentTime - stateStartTime : 0;
+    }
+
+    public long getTotalTime() {
+        long currentTime = System.currentTimeMillis();
+        return (taskStartTime > 0) ? currentTime - taskStartTime : 0;
+    }
+
+    // ------------------------
+    // Persistence
+    // ------------------------
+    public CompoundTag save() {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt(CURRENT_STEP, step);
+        tag.putLong(STATE_START_TIME, stateStartTime);
+        tag.putLong(TASK_START_TIME, taskStartTime);
+        return tag;
+    }
+
+    public void load(CompoundTag tag) {
+        if (tag.contains(CURRENT_STEP)) {
+            step = tag.getInt(CURRENT_STEP);
+        } else {
+            step = -1;
+        }
+        stateStartTime = tag.getLong(STATE_START_TIME);
+        taskStartTime = tag.getLong(TASK_START_TIME);
+    }
+
+    public void reset() {
+        step = -1;
+        stateStartTime = 0;
+        taskStartTime = 0;
+    };
+
+
+    // ------------------------
+    // Hooks for subclasses
+    // ------------------------
+    public abstract void setData(String key, Object value);
+    public abstract Optional<Object> getData(String key);
 }

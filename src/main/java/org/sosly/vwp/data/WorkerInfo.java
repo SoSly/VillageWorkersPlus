@@ -2,15 +2,16 @@ package org.sosly.vwp.data;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 
 import java.util.UUID;
 
 public class WorkerInfo {
     private final UUID id;
-    private String name;
+    private Component name;
     private BlockPos workPosition;
     
-    public WorkerInfo(UUID id, String name, BlockPos workPosition) {
+    public WorkerInfo(UUID id, Component name, BlockPos workPosition) {
         this.id = id;
         this.name = name;
         this.workPosition = workPosition;
@@ -20,11 +21,11 @@ public class WorkerInfo {
         return id;
     }
     
-    public String getName() {
+    public Component getName() {
         return name;
     }
     
-    public void setName(String name) {
+    public void setName(Component name) {
         this.name = name;
     }
     
@@ -39,7 +40,7 @@ public class WorkerInfo {
     public CompoundTag save() {
         CompoundTag tag = new CompoundTag();
         tag.putUUID("id", id);
-        tag.putString("name", name);
+        tag.putString("name", name.getString());
         if (workPosition != null) {
             tag.putInt("workX", workPosition.getX());
             tag.putInt("workY", workPosition.getY());
@@ -50,7 +51,7 @@ public class WorkerInfo {
     
     public static WorkerInfo load(CompoundTag tag) {
         UUID id = tag.getUUID("id");
-        String name = tag.getString("name");
+        Component name = Component.literal(tag.getString("name"));
         BlockPos workPos = null;
         if (tag.contains("workX")) {
             workPos = new BlockPos(tag.getInt("workX"), tag.getInt("workY"), tag.getInt("workZ"));

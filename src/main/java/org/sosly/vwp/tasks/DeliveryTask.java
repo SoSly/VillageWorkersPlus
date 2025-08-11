@@ -1,256 +1,165 @@
 package org.sosly.vwp.tasks;
 
+import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtUtils;
-import net.minecraft.nbt.Tag;
-import net.minecraft.world.Container;
-import net.minecraft.world.item.ItemStack;
-import org.sosly.vwp.data.WorkerInfo;
+import org.sosly.vwp.VillageWorkersPlus;
+import org.sosly.vwp.data.Need;
+import org.sosly.vwp.entities.ai.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-public class DeliveryTask extends AbstractTask {
-    public enum State {
-        IDLE,
-        SELECTING_WORKER,
-        NAVIGATING_TO_WORKER,
-        ASSESSING_NEEDS,
-        GOING_TO_OWN_CHEST,
-        COLLECTING_ITEMS,
-        GOING_TO_WORKER_CHEST,
-        DELIVERING_ITEMS,
-        RETURNING_HOME
-    }
-    
-    private State currentState = State.IDLE;
-    private WorkerInfo targetWorker;
-    private UUID targetWorkerId;
-    private BlockPos targetWorkerChestPos;
-    private BlockPos ownChestPos;
-    private BlockPos homePos;
-    private List<ItemStack> itemsToDeliver = new ArrayList<>();
-    private Container openContainer;
-    private boolean chestOpened;
-    private int attemptCount;
-    private final Map<UUID, Long> lastVisitTimes = new HashMap<>();
-    
-    public DeliveryTask() {
-        super();
+public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
+    private final Supplier<AbstractWorkerEntity> deliverer;
+    private List<Need> needs;
+    private AbstractWorkerEntity target;
+    private static final String NEEDS = "items";
+    private static final String TARGET = "target";
+
+    public DeliveryTask(Supplier<AbstractWorkerEntity> deliverer) {
+        super(State.class);
+        this.deliverer = deliverer;
         reset();
     }
-    
-    public void transitionTo(State newState) {
-        this.currentState = newState;
-        this.stateStartTime = 0;
-    }
-    
-    public boolean isInState(State state) {
-        return currentState == state;
-    }
-    
-    public State getCurrentState() {
-        return currentState;
-    }
-    
-    public WorkerInfo getTargetWorker() {
-        return targetWorker;
-    }
-    
-    public void setTargetWorker(WorkerInfo worker) {
-        this.targetWorker = worker;
-        this.targetWorkerId = worker != null ? worker.getId() : null;
-    }
-    
-    public BlockPos getTargetWorkerChestPos() {
-        return targetWorkerChestPos;
-    }
-    
-    public void setTargetWorkerChestPos(BlockPos pos) {
-        this.targetWorkerChestPos = pos;
-    }
-    
-    public BlockPos getOwnChestPos() {
-        return ownChestPos;
-    }
-    
-    public void setOwnChestPos(BlockPos pos) {
-        this.ownChestPos = pos;
-    }
-    
-    public BlockPos getHomePos() {
-        return homePos;
-    }
-    
-    public void setHomePos(BlockPos pos) {
-        this.homePos = pos;
-    }
-    
-    public List<ItemStack> getItemsToDeliver() {
-        return itemsToDeliver;
-    }
-    
-    public void setItemsToDeliver(List<ItemStack> items) {
-        this.itemsToDeliver.clear();
-        if (items != null) {
-            this.itemsToDeliver.addAll(items);
-        }
-    }
-    
-    public Container getOpenContainer() {
-        return openContainer;
-    }
-    
-    public void setOpenContainer(Container container) {
-        this.openContainer = container;
-    }
-    
-    public boolean isChestOpened() {
-        return chestOpened;
-    }
-    
-    public void setChestOpened(boolean opened) {
-        this.chestOpened = opened;
-    }
-    
-    public int getAttemptCount() {
-        return attemptCount;
-    }
-    
-    public void incrementAttemptCount() {
-        this.attemptCount++;
-    }
-    
-    public void resetAttemptCount() {
-        this.attemptCount = 0;
-    }
-    
-    public void recordVisit(UUID workerId, long gameTime) {
-        lastVisitTimes.put(workerId, gameTime);
-    }
-    
-    public long getLastVisitTime(UUID workerId) {
-        return lastVisitTimes.getOrDefault(workerId, 0L);
-    }
-    
-    public boolean wasRecentlyVisited(UUID workerId, long currentTime, long cooldownTicks) {
-        long lastVisit = getLastVisitTime(workerId);
-        return (currentTime - lastVisit) < cooldownTicks;
-    }
-    
+
     @Override
     public void reset() {
-        currentState = State.IDLE;
-        targetWorker = null;
-        targetWorkerId = null;
-        targetWorkerChestPos = null;
-        ownChestPos = null;
-        homePos = null;
-        itemsToDeliver.clear();
-        openContainer = null;
-        chestOpened = false;
-        attemptCount = 0;
-        stateStartTime = 0;
-        lastUpdateTime = 0;
+        super.reset();
+        this.target = null;
     }
-    
+
     @Override
-    public void save(CompoundTag tag) {
-        saveBaseData(tag);
-        tag.putString("CurrentState", currentState.name());
-        
-        if (targetWorkerId != null) {
-            tag.putUUID("TargetWorkerId", targetWorkerId);
-        }
-        
-        if (targetWorkerChestPos != null) {
-            tag.put("TargetWorkerChestPos", NbtUtils.writeBlockPos(targetWorkerChestPos));
-        }
-        
-        if (ownChestPos != null) {
-            tag.put("OwnChestPos", NbtUtils.writeBlockPos(ownChestPos));
-        }
-        
-        if (homePos != null) {
-            tag.put("HomePos", NbtUtils.writeBlockPos(homePos));
-        }
-        
-        ListTag itemsList = new ListTag();
-        for (ItemStack stack : itemsToDeliver) {
-            if (!stack.isEmpty()) {
-                CompoundTag itemTag = new CompoundTag();
-                stack.save(itemTag);
-                itemsList.add(itemTag);
+    public void setData(String key, Object value) {
+        switch (key) {
+            case NEEDS -> {
+                if (!(value instanceof List<?> valueList)) {
+                    throw new IllegalArgumentException("needs must be a List<Need>");
+                }
+
+                if (!valueList.stream().allMatch(Need.class::isInstance)) {
+                    throw new IllegalArgumentException("needs must be a List<Need>");
+                }
+
+                this.needs = ((List<Need>) valueList);
             }
+            case TARGET -> {
+                if (!(value instanceof AbstractWorkerEntity)) {
+                    throw new IllegalArgumentException("target must be an AbstractWorkerEntity");
+                }
+
+                this.target = (AbstractWorkerEntity) value;
+            }
+            default -> throw new IllegalArgumentException("Unknown task data key: " + key);
         }
-        tag.put("ItemsToDeliver", itemsList);
-        
-        tag.putBoolean("ChestOpened", chestOpened);
-        tag.putInt("AttemptCount", attemptCount);
-        
-        CompoundTag visitsTag = new CompoundTag();
-        for (Map.Entry<UUID, Long> entry : lastVisitTimes.entrySet()) {
-            visitsTag.putLong(entry.getKey().toString(), entry.getValue());
-        }
-        tag.put("LastVisitTimes", visitsTag);
     }
-    
+
+    @Override
+    public Optional<Object> getData(String key) {
+        switch (key) {
+            case NEEDS -> {
+                if (needs == null) {
+                    return Optional.empty();
+                }
+                return Optional.of(needs);
+            }
+            case TARGET -> {
+                if (target == null) {
+                    return Optional.empty();
+                }
+                return Optional.of(target);
+            }
+            default -> throw new IllegalArgumentException("Unknown task data key: " + key);
+        }
+    }
+
+    @Override
+    public CompoundTag save() {
+        CompoundTag nbt = super.save();
+
+        if (target != null) {
+            nbt.putUUID(TARGET, target.getUUID());
+        }
+
+        return nbt;
+    }
+
     @Override
     public void load(CompoundTag tag) {
-        loadBaseData(tag);
-        
-        String stateName = tag.getString("CurrentState");
-        try {
-            currentState = State.valueOf(stateName);
-        } catch (IllegalArgumentException e) {
-            currentState = State.IDLE;
-        }
-        
-        if (tag.hasUUID("TargetWorkerId")) {
-            targetWorkerId = tag.getUUID("TargetWorkerId");
-        }
-        
-        if (tag.contains("TargetWorkerChestPos")) {
-            targetWorkerChestPos = NbtUtils.readBlockPos(tag.getCompound("TargetWorkerChestPos"));
-        }
-        
-        if (tag.contains("OwnChestPos")) {
-            ownChestPos = NbtUtils.readBlockPos(tag.getCompound("OwnChestPos"));
-        }
-        
-        if (tag.contains("HomePos")) {
-            homePos = NbtUtils.readBlockPos(tag.getCompound("HomePos"));
-        }
-        
-        itemsToDeliver.clear();
-        ListTag itemsList = tag.getList("ItemsToDeliver", Tag.TAG_COMPOUND);
-        for (int i = 0; i < itemsList.size(); i++) {
-            CompoundTag itemTag = itemsList.getCompound(i);
-            ItemStack stack = ItemStack.of(itemTag);
-            if (!stack.isEmpty()) {
-                itemsToDeliver.add(stack);
+        super.load(tag);
+        VillageWorkersPlus.LOGGER.debug("Loading delivery task");
+        if (tag.contains(TARGET)) {
+            this.target = (AbstractWorkerEntity) Objects.requireNonNull(deliverer.get().getServer())
+                    .overworld()
+                    .getEntity(tag.getUUID(TARGET));
+
+            if (this.target == null) {
+                this.reset();
+                return;
             }
         }
-        
-        chestOpened = tag.getBoolean("ChestOpened");
-        attemptCount = tag.getInt("AttemptCount");
-        
-        lastVisitTimes.clear();
-        if (tag.contains("LastVisitTimes")) {
-            CompoundTag visitsTag = tag.getCompound("LastVisitTimes");
-            for (String key : visitsTag.getAllKeys()) {
-                try {
-                    UUID workerId = UUID.fromString(key);
-                    long visitTime = visitsTag.getLong(key);
-                    lastVisitTimes.put(workerId, visitTime);
-                } catch (IllegalArgumentException ignored) {
-                }
+    }
+
+    public enum State implements TaskState {
+        SELECTING_WORKER(new Step(TargetKnownWorkerGoal.class)),
+        NAVIGATING_TO_WORKER(new Step(MoveToDestinationGoal.class,
+                t -> getTargetAt((DeliveryTask) t))),
+        ASSESSING_NEEDS(new Step(AssessWorkerNeedsGoal.class)),
+        GOING_TO_OWN_CHEST(new Step(MoveToDestinationGoal.class,
+                t -> getDeliverChest((DeliveryTask) t))),
+        COLLECTING_ITEMS(new Step(GetItemsFromContainerGoal.class,
+                t -> getDeliverChest((DeliveryTask) t))),
+        GOING_TO_WORKER_CHEST(new Step(MoveToDestinationGoal.class,
+                t -> getTargetChest((DeliveryTask) t))),
+        DELIVERING_ITEMS(new Step(PutItemsInContainerGoal.class,
+                t -> getTargetChest((DeliveryTask) t))),
+        RETURNING_HOME(new Step(MoveToDestinationGoal.class,
+                t -> getDelivererHome((DeliveryTask) t)))
+
+        ;
+
+        private final Step step;
+
+        State(Step step) {
+            this.step = step;
+        }
+
+        public Step getStep() {
+            return step;
+        }
+
+        private static BlockPos getDelivererHome(DeliveryTask task) {
+            AbstractWorkerEntity deliverer = task.deliverer.get();
+            if (deliverer == null) {
+                return null;
             }
+            return deliverer.getStartPos();
+        }
+
+        private static BlockPos getTargetAt(DeliveryTask task) {
+            AbstractWorkerEntity target = task.target;
+            if (target == null) {
+                return null;
+            }
+            return target.blockPosition();
+        }
+
+        private static BlockPos getDeliverChest(DeliveryTask task) {
+            AbstractWorkerEntity deliverer = task.deliverer.get();
+            if (deliverer == null) {
+                return null;
+            }
+            return deliverer.getChestPos();
+        }
+
+        private static BlockPos getTargetChest(DeliveryTask task) {
+            AbstractWorkerEntity target = task.target;
+            if (target == null) {
+                return null;
+            }
+            return target.getChestPos();
         }
     }
 }

@@ -11,19 +11,12 @@
   "config.vwp.porterChatDistance": "Porter Chat Distance",
   "config.vwp.porterIntroductionTime": "Porter Introduction Time",
   "config.vwp.porterVisitInterval": "Porter Visit Interval",
-  
-  "chat.vwp.porter.meeting_new_worker": "I'm going to meet a new worker!",
-  "chat.vwp.porter.met_worker": "I met %s!",
-  "chat.vwp.porter.havent_seen_worker": "I haven't seen %s in a while...",
-  "chat.vwp.porter.wondering_about_worker": "I wonder how %s is doing...",
-  
-  "chat.vwp.porter.worker_needs_items": "%s needs %s. I'll get it for them!",
-  "chat.vwp.porter.no_chest": "I don't have a chest assigned to me!",
-  "chat.vwp.porter.cant_find_chest": "I can't find my chest!",
-  "chat.vwp.porter.found_items_for_worker": "Got supplies for %s!",
-  "chat.vwp.porter.no_items_for_worker": "I don't have what %s needs in my chest.",
-  "chat.vwp.porter.cant_find_worker_chest": "I can't find %s's chest!",
-  "chat.vwp.porter.delivered_items": "Delivered supplies to %s!",
-  
+
+  "chat.vwp.assess_worker_needs.success": "%s needs supplies. Let me go see if I have what they need.",
+  "chat.vwp.meet_new_worker.start": "I see someone new!  I should go say hello.",
+  "chat.vwp.meet_new_worker.end": "I learned a little about %s.",
+  "chat.vwp.selecting_worker.success": "I wonder how %s is doing...",
+  "chat.vwp.put_items_in_container.success": "I put %d %s in the chest.",
+
   "config.vwp.porterMinFoodDelivery": "Porter Min Food Delivery"
 }

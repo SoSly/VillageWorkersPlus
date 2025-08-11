@@ -2,16 +2,16 @@ package org.sosly.vwp.entities.workers;
 
 import com.talhanation.workers.CommandEvents;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
-import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.PanicGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
@@ -22,25 +22,24 @@ import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.sosly.vwp.VillageWorkersPlus;
-import org.sosly.vwp.config.CommonConfig;
-import org.sosly.vwp.data.WorkerInfo;
+import org.sosly.vwp.data.WorkerRelationships;
 import org.sosly.vwp.entities.ai.*;
-import org.sosly.vwp.tasks.DeliveryTask;
 import org.sosly.vwp.gui.providers.HireProvider;
 import org.sosly.vwp.gui.providers.WorkerProvider;
 import org.sosly.vwp.networking.PacketHandler;
 import org.sosly.vwp.networking.clientbound.UpdateHireScreen;
 import org.sosly.vwp.networking.serverbound.OpenHireGUI;
 import org.sosly.vwp.networking.serverbound.OpenWorkerGUI;
+import org.sosly.vwp.tasks.DeliveryTask;
 
-import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class Porter extends AbstractWorkerEntity {
-    private final Map<UUID, WorkerInfo> knownWorkers = new HashMap<>();
-    private final DeliveryTask deliveryTask = new DeliveryTask();
-    
+    private final WorkerRelationships relationships = new WorkerRelationships();
+    private final DeliveryTask delivery = new DeliveryTask(() -> this);
+
     public Porter(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
         this.setProfessionName("Porter");
@@ -50,42 +49,26 @@ public class Porter extends AbstractWorkerEntity {
     @Override
     public void addAdditionalSaveData(@NotNull CompoundTag nbt) {
         super.addAdditionalSaveData(nbt);
-        
-        CompoundTag knownWorkersTag = new CompoundTag();
-        knownWorkersTag.putInt("count", knownWorkers.size());
-        int index = 0;
-        for (WorkerInfo info : knownWorkers.values()) {
-            knownWorkersTag.put("worker_" + index, info.save());
-            index++;
-        }
-        nbt.put("KnownWorkers", knownWorkersTag);
-        
-        CompoundTag taskTag = new CompoundTag();
-        deliveryTask.save(taskTag);
-        nbt.put("DeliveryTask", taskTag);
+
+        CompoundTag relationships = this.relationships.save();
+        nbt.put("relationships", relationships);
+
+        CompoundTag deliveryData = this.delivery.save();
+        nbt.put("delivery", deliveryData);
     }
 
     @Override
     public void readAdditionalSaveData(@NotNull CompoundTag nbt) {
         super.readAdditionalSaveData(nbt);
 
-        if (!nbt.contains("KnownWorkers")) {
-            VillageWorkersPlus.LOGGER.warn("Porter {} has no known workers data in NBT, initializing empty list.", this.getUUID());
-            return;
+        if (nbt.contains("relationships")) {
+            CompoundTag relationships = nbt.getCompound("relationships");
+            this.relationships.load(relationships);
         }
 
-        CompoundTag knownWorkersTag = nbt.getCompound("KnownWorkers");
-        int count = knownWorkersTag.getInt("count");
-        knownWorkers.clear();
-        for (int i = 0; i < count; i++) {
-            if (knownWorkersTag.contains("worker_" + i)) {
-                WorkerInfo info = WorkerInfo.load(knownWorkersTag.getCompound("worker_" + i));
-                knownWorkers.put(info.getId(), info);
-            }
-        }
-        
-        if (nbt.contains("DeliveryTask")) {
-            deliveryTask.load(nbt.getCompound("DeliveryTask"));
+        if (nbt.contains("delivery")) {
+            CompoundTag deliveryData = nbt.getCompound("delivery");
+            this.delivery.load(deliveryData);
         }
     }
 
@@ -97,60 +80,21 @@ public class Porter extends AbstractWorkerEntity {
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        this.goalSelector.addGoal(3, new MeetNewWorkerGoal(this));
-        this.goalSelector.addGoal(7, new SelectKnownWorkerGoal(this));
-        
-        this.goalSelector.addGoal(6, new NavigateToPositionGoal(this,
-            () -> {
-                if (!deliveryTask.isInState(DeliveryTask.State.NAVIGATING_TO_WORKER)) {
-                    return null;
-                }
-                WorkerInfo targetWorker = deliveryTask.getTargetWorker();
-                return targetWorker != null ? targetWorker.getWorkPosition() : null;
-            },
-            CommonConfig.porterChatDistance,
-            () -> deliveryTask.isInState(DeliveryTask.State.NAVIGATING_TO_WORKER)));
-        
-        this.goalSelector.addGoal(6, new AssessWorkerNeedsGoal(this));
-        
-        this.goalSelector.addGoal(5, new NavigateToPositionGoal(this,
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_OWN_CHEST) ? deliveryTask.getOwnChestPos() : null,
-            3.0,
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_OWN_CHEST)));
-        
-        this.goalSelector.addGoal(5, new OpenChestGoal(this,
-            () -> deliveryTask.getOwnChestPos(),
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_OWN_CHEST) && !deliveryTask.isChestOpened(),
-            () -> deliveryTask.transitionTo(DeliveryTask.State.COLLECTING_ITEMS)));
-        
-        this.goalSelector.addGoal(5, new CollectItemsFromChestGoal(this));
-        
-        this.goalSelector.addGoal(5, new CloseChestGoal(this,
-            () -> deliveryTask.getOwnChestPos(),
-            () -> deliveryTask.isInState(DeliveryTask.State.COLLECTING_ITEMS) && deliveryTask.isChestOpened(),
-            null));
-        
-        this.goalSelector.addGoal(4, new NavigateToPositionGoal(this,
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_WORKER_CHEST) ? deliveryTask.getTargetWorkerChestPos() : null,
-            3.0,
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_WORKER_CHEST)));
-        
-        this.goalSelector.addGoal(4, new OpenChestGoal(this,
-            () -> deliveryTask.getTargetWorkerChestPos(),
-            () -> deliveryTask.isInState(DeliveryTask.State.GOING_TO_WORKER_CHEST) && !deliveryTask.isChestOpened(),
-            () -> deliveryTask.transitionTo(DeliveryTask.State.DELIVERING_ITEMS)));
-        
-        this.goalSelector.addGoal(4, new DeliverItemsToChestGoal(this));
-        
-        this.goalSelector.addGoal(4, new CloseChestGoal(this,
-            () -> deliveryTask.getTargetWorkerChestPos(),
-            () -> deliveryTask.isInState(DeliveryTask.State.DELIVERING_ITEMS) && deliveryTask.isChestOpened(),
-            null));
-        
-        this.goalSelector.addGoal(3, new ReturnHomeGoal(this,
-            () -> this.getStartPos(),
-            () -> deliveryTask.isInState(DeliveryTask.State.RETURNING_HOME),
-            null));
+
+        // Delivery task goals
+        this.goalSelector.addGoal(3, new PutItemsInContainerGoal(this, () -> delivery));
+        this.goalSelector.addGoal(4, new GetItemsFromContainerGoal(this, () -> delivery));
+        this.goalSelector.addGoal(5, new MoveToDestinationGoal(this, () -> delivery, 2.5D));
+        this.goalSelector.addGoal(6, new AssessWorkerNeedsGoal(this, () -> delivery));
+        this.goalSelector.addGoal(7, new TargetKnownWorkerGoal(this, () -> delivery, () -> relationships));
+        this.goalSelector.addGoal(8, new EndTaskGoal(() -> delivery));
+        this.goalSelector.addGoal(9, new StartTaskGoal(() -> delivery));
+
+        // General worker goals
+        this.goalSelector.addGoal(1, new PanicGoal(this, 1.3D));
+        this.goalSelector.addGoal(11, new ReturnToHomeGoal(this));
+        this.goalSelector.addGoal(15, new RandomStrollGoal(this, 1.0D));
+        this.goalSelector.addGoal(20, new MeetNewWorkerGoal(this, () -> relationships));
     }
 
     @Override
@@ -220,54 +164,5 @@ public class Porter extends AbstractWorkerEntity {
                 .add(Attributes.MAX_HEALTH, 20.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.35D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D);
-    }
-    
-    public boolean knowsWorker(UUID workerId) {
-        return knownWorkers.containsKey(workerId);
-    }
-    
-    public void addKnownWorker(UUID workerId, String workerName, BlockPos workPosition) {
-        WorkerInfo previousInfo = knownWorkers.get(workerId);
-
-        if (previousInfo == null) {
-            knownWorkers.put(workerId, new WorkerInfo(workerId, workerName, workPosition));
-            return;
-        }
-
-        if (!previousInfo.getName().equals(workerName)) {
-            VillageWorkersPlus.LOGGER.info("Porter {} updated name for worker {} from '{}' to '{}'",
-                this.getUUID(), workerId, previousInfo.getName(), workerName);
-            previousInfo.setName(workerName);
-        }
-
-        if (workPosition != null && !workPosition.equals(previousInfo.getWorkPosition())) {
-            previousInfo.setWorkPosition(workPosition);
-        }
-    }
-    
-    public void removeKnownWorker(UUID workerId) {
-        knownWorkers.remove(workerId);
-    }
-
-    public List<WorkerInfo> getAllKnownWorkers() {
-        return new ArrayList<>(knownWorkers.values());
-    }
-    
-    public List<WorkerInfo> getKnownWorkers() {
-        return getAllKnownWorkers();
-    }
-    
-    public DeliveryTask getDeliveryTask() {
-        return deliveryTask;
-    }
-
-    public void chat(Component message) {
-        if (CommonConfig.porterIsChatty) {
-            tellPlayer(getOwner(), message);
-        }
-    }
-
-    public double getMovementSpeed() {
-        return Objects.requireNonNull(this.getAttribute(Attributes.MOVEMENT_SPEED)).getValue();
     }
 }
