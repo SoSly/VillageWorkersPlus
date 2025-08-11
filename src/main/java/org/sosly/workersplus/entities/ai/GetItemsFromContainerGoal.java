@@ -167,6 +167,8 @@ public class GetItemsFromContainerGoal extends AbstractTaskGoal {
         }
 
         if (isStuckInCurrentStep()) {
+            VillageWorkersPlus.LOGGER.warn("Worker {} is stuck in GetItemsFromContainerGoal, resetting task.",
+                    worker.getUUID());
             getTask().reset();
             return false;
         }

@@ -53,7 +53,6 @@ public class AssessWorkerNeedsGoal extends AbstractTaskGoal {
 
     @Override
     public void stop() {
-
         if (!getTask().isCurrentStep(this)) {
             return;
         }

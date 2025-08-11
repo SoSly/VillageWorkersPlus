@@ -42,18 +42,12 @@ public class MoveToDestinationGoal extends AbstractTaskGoal {
             return false;
         }
 
-        double distance = worker.distanceToSqr(destination.getX(), destination.getY(), destination.getZ());
-        return distance > distanceThreshold;
+        return !destination.closerToCenterThan(worker.position(), distanceThreshold);
     }
 
     @Override
     public boolean canContinueToUse() {
-        if (!this.canUse()) {
-            return false;
-        }
-
-        double distance = worker.distanceToSqr(destination.getX(), destination.getY(), destination.getZ());
-        return distance > distanceThreshold;
+        return this.canUse();
     }
 
     @Override
@@ -78,6 +72,8 @@ public class MoveToDestinationGoal extends AbstractTaskGoal {
         }
 
         if (isStuckInCurrentStep()) {
+            VillageWorkersPlus.LOGGER.warn("Worker {} is stuck in MoveToDestinationGoal, resetting task.",
+                    worker.getUUID());
             getTask().reset();
             return false;
         }

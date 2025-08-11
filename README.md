@@ -10,14 +10,8 @@
 Adds new villager professions and infrastructure systems to make your villages feel more alive and interconnected.
 
 ## Features
-- New professions for worker
-
-## Planned
-- Additional professions: Cooks, Bankers/Storekeepers, Craftsmen
-- New infrastructure: Warehouses, Markets, and Request Boards
-- Integration with Villager Comfort
-- Economy system with workers paying one another for services
-
+- New Worker Professions!
+- 
 ## New Professions
 
 ### Porters
@@ -30,3 +24,8 @@ Porters act as the logistical link in your village, delivering resources between
     1. Visit them regularly to check needs.
     2. Deliver items from their assigned chest to the worker’s chest.
 - Hireable from Level 2+ Cartographer villagers via the Porter Workstation.
+
+## Planned
+- Additional professions: Cooks, Warehouse Managers, Craftsmen
+- Villager Comfort System: Environmental factors can affect worker efficiency
+- Economy system with workers paying one another for services
