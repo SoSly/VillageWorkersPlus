@@ -89,7 +89,7 @@ public class Worker {
         int food = 0;
         for (int i = 0; i < container.getContainerSize(); i++) {
             ItemStack stack = container.getItem(i);
-            if (!stack.isEmpty() && stack.getItem().isEdible()) {
+            if (!stack.isEmpty() && Need.FOOD_MATCHER.test(stack)) {
                 food += stack.getCount();
             }
         }

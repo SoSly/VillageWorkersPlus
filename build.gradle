@@ -13,6 +13,7 @@ buildscript {
         classpath 'com.modrinth.minotaur:Minotaur:2.+' // Modrinth Gradle Plugin
         classpath 'org.parchmentmc:librarian:1.+'
         classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath 'com.adarshr:gradle-test-logger-plugin:3.2.0' // Test Logger Plugin
     }
 }
 
@@ -23,6 +24,7 @@ apply plugin: 'maven-publish'
 apply plugin: "com.matthewprenger.cursegradle"
 apply plugin: "com.modrinth.minotaur"
 apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'com.adarshr.test-logger'
 
 version = "${minecraft_version}-${api_name}-${mod_version}"
 group = "${mod_group}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
@@ -173,6 +175,24 @@ publishing {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+testlogger {
+    theme 'mocha'
+    showExceptions true
+    showStackTraces true
+    showFullStackTraces false
+    showCauses true
+    slowThreshold 2000
+    showSummary true
+    showSimpleNames false
+    showPassed true
+    showSkipped true
+    showFailed true
+    showStandardStreams false
+    showPassedStandardStreams false
+    showSkippedStandardStreams false
+    showFailedStandardStreams true
 }
 
 // CurseForge deployment configuration

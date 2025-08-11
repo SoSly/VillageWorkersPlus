@@ -173,6 +173,39 @@ public class WorkerTests {
         test.succeed();
     }
 
+    @GameTest(template = "empty", batch = BATCH, attempts = 3, requiredSuccesses = 3)
+    public static void testCountFoodInContainer(final @NotNull GameTestHelper test) {
+        Porter worker = test.spawn(EntityTypes.PORTER.get(), 1, 2, 1);
+        BlockPos chestPos = new BlockPos(0, 1, 0);
+        test.setBlock(chestPos, Blocks.CHEST);
+        worker.setChestPos(test.absolutePos(chestPos));
+        
+        Container chest = Worker.getChestContainer(worker).orElse(null);
+        assert chest != null;
+        
+        chest.setItem(0, new ItemStack(Items.BREAD, 10));
+        chest.setItem(1, new ItemStack(Items.PUFFERFISH, 5));
+        chest.setItem(2, new ItemStack(Items.SWEET_BERRIES, 20));
+        chest.setItem(3, new ItemStack(Items.COOKED_BEEF, 15));
+        chest.setItem(4, new ItemStack(Items.ROTTEN_FLESH, 8));
+        chest.setItem(5, new ItemStack(Items.GOLDEN_CARROT, 7));
+        chest.setItem(6, new ItemStack(Items.IRON_INGOT, 64));
+        
+        List<Need> needs = Worker.getNeeds(worker);
+        
+        int expectedFoodCount = 32; // Only bread (10), cooked beef (15), and golden carrot (7) should be counted = 32
+        boolean hasFoodNeed = needs.stream().anyMatch(need ->
+            need.getName().getString().contains("food"));
+        
+        if (expectedFoodCount >= CommonConfig.workerFoodThreshold) {
+            test.assertFalse(hasFoodNeed, "Should not need food when " + expectedFoodCount + " valid food items present");
+        } else {
+            test.assertTrue(hasFoodNeed, "Should need food when only " + expectedFoodCount + " valid food items present");
+        }
+        
+        test.succeed();
+    }
+
     private static class MockWorker extends Porter {
         public List<Item> tools = null;
         
