@@ -2,6 +2,7 @@ package org.sosly.vwp.entities.ai;
 
 import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
@@ -9,6 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import org.sosly.vwp.VillageWorkersPlus;
+import org.sosly.vwp.config.CommonConfig;
 import org.sosly.vwp.data.ItemPredicate;
 import org.sosly.vwp.tasks.AbstractTask;
 import org.sosly.vwp.utils.Containers;
@@ -53,8 +55,7 @@ public class GetItemsFromContainerGoal extends AbstractTaskGoal {
             return false;
         }
 
-        double distance = worker.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
-        return distance < 2.5D; // TODO: consider using a configuration option for the distance threshold
+        return pos.closerToCenterThan(worker.position(), CommonConfig.containerReachDistance);
     }
 
     @Override

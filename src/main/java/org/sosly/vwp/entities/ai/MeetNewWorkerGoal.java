@@ -3,6 +3,7 @@ package org.sosly.vwp.entities.ai;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 import org.sosly.vwp.VillageWorkersPlus;
@@ -72,7 +73,7 @@ public class MeetNewWorkerGoal extends Goal {
         }
 
         long currentTime = worker.level().getGameTime();
-        return currentTime - introductionStartTime <= CommonConfig.porterIntroductionTime;
+        return currentTime - introductionStartTime <= CommonConfig.workerMeetingDuration;
     }
 
     @Override
@@ -86,7 +87,6 @@ public class MeetNewWorkerGoal extends Goal {
         isMovingToTarget = true;
         worker.setTarget(targetWorker);
         Chat.send(worker, Component.translatable("chat.vwp.meet_new_worker.start"));
-        VillageWorkersPlus.LOGGER.debug("{} is moving to meet new worker: {}", worker.getName().getString(), targetWorker.getName().getString());
     }
 
     @Override
@@ -100,7 +100,7 @@ public class MeetNewWorkerGoal extends Goal {
             return;
         }
 
-        if (worker.distanceToSqr(target) > CommonConfig.porterChatDistance * CommonConfig.porterChatDistance) {
+        if (!worker.position().closerThan(target.position(), CommonConfig.workerChatRadius)) {
             worker.getNavigation().moveTo(target, 1.0);
             return;
         }
@@ -134,14 +134,12 @@ public class MeetNewWorkerGoal extends Goal {
 
         isIntroducing = false;
         isMovingToTarget = false;
-        VillageWorkersPlus.LOGGER.debug("{} has met new worker: {} at position {}",
-                worker.getName().getString(), name.getString(), targetPos.toShortString());
     }
 
     private AbstractWorkerEntity findUnknownWorker() {
         List<AbstractWorkerEntity> nearbyWorkers = worker.level().getEntitiesOfClass(
                 AbstractWorkerEntity.class,
-                worker.getBoundingBox().inflate(CommonConfig.porterScanRadius),
+                worker.getBoundingBox().inflate(CommonConfig.workerDetectionRadius),
                 target -> target != worker &&
                         target.isAlive() &&
                         target.getOwner() != null &&

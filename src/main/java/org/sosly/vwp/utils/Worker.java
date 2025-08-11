@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import org.sosly.vwp.config.CommonConfig;
 import org.sosly.vwp.data.Need;
 
 import javax.annotation.Nullable;
@@ -63,8 +64,7 @@ public class Worker {
         getChestContainer(worker)
                 .ifPresent(container -> food.addAndGet(countFoodInContainer(container)));
 
-        // todo: use a configuration option for the food threshold
-        if (food.get() < 3) {
+        if (food.get() < CommonConfig.workerFoodThreshold) {
             needs.add(Need.food());
         }
 

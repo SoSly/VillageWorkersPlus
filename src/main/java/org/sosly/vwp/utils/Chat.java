@@ -18,7 +18,7 @@ public class Chat {
             return;
         }
 
-        if (!CommonConfig.porterIsChatty) {
+        if (!CommonConfig.workersAreChatty) {
             return;
         }
 
@@ -38,8 +38,7 @@ public class Chat {
     private static List<ServerPlayer> getNearbyPlayers(AbstractWorkerEntity sender) {
         return sender.level().getEntitiesOfClass(
                 ServerPlayer.class,
-                // todo: Move this to a config option - workerChatRange
-                sender.getBoundingBox().inflate(80.0D),
+                sender.getBoundingBox().inflate(CommonConfig.workerChatBroadcastRange),
                 LivingEntity::isAlive);
     }
 }

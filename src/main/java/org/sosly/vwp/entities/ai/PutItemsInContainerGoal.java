@@ -3,6 +3,7 @@ package org.sosly.vwp.entities.ai;
 import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.player.Player;
@@ -10,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import org.sosly.vwp.VillageWorkersPlus;
+import org.sosly.vwp.config.CommonConfig;
 import org.sosly.vwp.data.ItemPredicate;
 import org.sosly.vwp.tasks.AbstractTask;
 import org.sosly.vwp.utils.Chat;
@@ -55,8 +57,7 @@ public class PutItemsInContainerGoal extends AbstractTaskGoal {
             return false;
         }
 
-        double distance = worker.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
-        return distance < 2.5D; // TODO: consider using a configuration option for the distance threshold
+        return pos.closerToCenterThan(worker.position(), CommonConfig.containerReachDistance);
     }
 
     @Override
@@ -75,7 +76,6 @@ public class PutItemsInContainerGoal extends AbstractTaskGoal {
 
     @Override
     public void start() {
-        VillageWorkersPlus.LOGGER.debug("Starting PutItemsInContainerGoal for worker: {}", worker.getUUID());
         currentNeedIndex = 0;
         attemptedNeeds = new boolean[items.size()];
 
@@ -108,7 +108,6 @@ public class PutItemsInContainerGoal extends AbstractTaskGoal {
         if (be instanceof ChestBlockEntity chest) {
             chest.stopOpen(player);
         }
-        VillageWorkersPlus.LOGGER.debug("Stopping PutItemsInContainerGoal for worker: {}", worker.getUUID());
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.goal.Goal;
 import org.sosly.vwp.VillageWorkersPlus;
+import org.sosly.vwp.config.CommonConfig;
 import org.sosly.vwp.data.Need;
 import org.sosly.vwp.tasks.AbstractTask;
 import org.sosly.vwp.utils.Chat;
@@ -37,8 +38,8 @@ public class AssessWorkerNeedsGoal extends AbstractTaskGoal {
         }
 
         return getTaskTarget()
-                .filter(abstractWorkerEntity -> worker.blockPosition()
-                        .closerThan(abstractWorkerEntity.blockPosition(), 5)) // todo: use a configuration option for the distance
+                .filter(abstractWorkerEntity -> worker.position()
+                        .closerThan(abstractWorkerEntity.position(), CommonConfig.workerAssessmentDistance))
                 .isPresent();
     }
 
@@ -76,8 +77,6 @@ public class AssessWorkerNeedsGoal extends AbstractTaskGoal {
         Chat.send(worker, Component.translatable("chat.vwp.assess_worker_needs.success",
                 target.getName()));
         getTask().next();
-        VillageWorkersPlus.LOGGER.debug("Worker {} assessed needs of {}: {}",
-                worker.getUUID(), target.getUUID(), needs);
     }
 
     @Override

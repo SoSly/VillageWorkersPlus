@@ -87,7 +87,6 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
             lastSelectTimes.put(target.getUUID(), currentTime);
         }
 
-        VillageWorkersPlus.LOGGER.debug("Worker {} selected target {}", worker.getUUID(), target.getUUID());
         getTask().setData("target", target);
         getTask().next();
         Chat.send(worker, Component.translatable("chat.vwp.selecting_worker.success", target.getName()));

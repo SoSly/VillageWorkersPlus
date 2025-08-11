@@ -9,76 +9,97 @@ import org.sosly.vwp.VillageWorkersPlus;
 @Mod.EventBusSubscriber(modid = VillageWorkersPlus.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CommonConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    
+    // General Worker Settings
+    static {
+        BUILDER.push("general");
+        BUILDER.comment("General settings for all workers");
+    }
+    
+    private static final ForgeConfigSpec.BooleanValue WORKERS_ARE_CHATTY = BUILDER
+            .comment("Whether workers announce what they're doing")
+            .define("workersAreChatty", true);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_MEETING_DURATION = BUILDER
+            .comment("Time in seconds for workers to meet each other")
+            .defineInRange("workerMeetingDuration", 5, 2, 30);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_CHAT_RADIUS = BUILDER
+            .comment("How close a worker must be to another to chat (in blocks)")
+            .defineInRange("workerChatRadius", 5, 2, 10);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_DETECTION_RADIUS = BUILDER
+            .comment("Radius in blocks that workers will scan for other workers")
+            .defineInRange("workerDetectionRadius", 80, 16, 512);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_CHAT_BROADCAST_RANGE = BUILDER
+            .comment("Range in blocks that worker chat messages are visible to players")
+            .defineInRange("workerChatBroadcastRange", 30, 10, 100);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_FOOD_THRESHOLD = BUILDER
+            .comment("Minimum food items before a worker needs more")
+            .defineInRange("workerFoodThreshold", 3, 1, 20);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_FOOD_AMOUNT = BUILDER
+            .comment("Amount of food items supplied to a worker when they need food")
+            .defineInRange("workerFoodAmount", 16, 1, 64);
+    
+    private static final ForgeConfigSpec.DoubleValue CONTAINER_REACH_DISTANCE = BUILDER
+            .comment("Distance in blocks that workers can interact with containers")
+            .defineInRange("containerReachDistance", 2.5, 1.0, 5.0);
+    
+    private static final ForgeConfigSpec.IntValue WORKER_ASSESSMENT_DISTANCE = BUILDER
+            .comment("Distance in blocks to assess worker needs")
+            .defineInRange("workerAssessmentDistance", 5, 2, 20);
+    
+    static {
+        BUILDER.pop();
+    }
+    
+    // Porter Settings
+    static {
+        BUILDER.push("porter");
+        BUILDER.comment("Porter-specific settings");
+    }
+    
     private static final ForgeConfigSpec.BooleanValue ENABLE_PORTERS = BUILDER
             .comment("Enable Porter workers (logistics/delivery)")
             .define("enablePorters", true);
-    private static final ForgeConfigSpec.IntValue PORTER_HIRE_COST = BUILDER
-            .comment("The amount of currency required to hire a Porter (takes effect after restart)")
-            .defineInRange("porterHireCost", 25, 0, 999);
-
-    private static final ForgeConfigSpec.IntValue PORTER_MAX_MEMORY = BUILDER
-            .comment("Maximum number of workers a fully-equipped Porter can remember (with Book & Quill, Feather, and Ink Sac). Minimum is 4.")
-            .defineInRange("porterMaxMemory", 16, 4, 100);
-
-    private static final ForgeConfigSpec.IntValue PORTER_SCAN_RADIUS = BUILDER
-            .comment("Radius in blocks that a Porter will scan for new workers to meet")
-            .defineInRange("porterScanRadius", 80, 16, 512);
-
-    private static final ForgeConfigSpec.IntValue PORTER_CHAT_DISTANCE = BUILDER
-            .comment("How close a Porter must be to a worker to chat with them (in blocks)")
-            .defineInRange("porterChatDistance", 5, 2, 10);
-
-    private static final ForgeConfigSpec.IntValue PORTER_INTRODUCTION_TIME = BUILDER
-            .comment("Time in seconds for a Porter to introduce themselves to a new worker")
-            .defineInRange("porterIntroductionTime", 5, 2, 30);
-
-    private static final ForgeConfigSpec.IntValue PORTER_VISIT_INTERVAL = BUILDER
-            .comment("Time in minutes between Porter visits to each known worker")
-            .defineInRange("porterVisitInterval", 5, 1, 60);
-
-    private static final ForgeConfigSpec.BooleanValue PORTER_IS_CHATTY = BUILDER
-            .comment("Whether the Porter announces what they're doing (meeting workers, checking on them, etc.)")
-            .define("porterIsChatty", true);
-
-    private static final ForgeConfigSpec.IntValue PORTER_MIN_FOOD_DELIVERY = BUILDER
-            .comment("Minimum food items Porter tries to maintain for each worker")
-            .defineInRange("porterMinFoodDelivery", 10, 1, 64);
+    
+    static {
+        BUILDER.pop();
+    }
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
+    // General Worker Settings
+    public static boolean workersAreChatty;
+    public static int workerMeetingDuration;
+    public static int workerChatRadius;
+    public static int workerDetectionRadius;
+    public static int workerChatBroadcastRange;
+    public static int workerFoodThreshold;
+    public static int workerFoodAmount;
+    public static double containerReachDistance;
+    public static int workerAssessmentDistance;
+    
+    // Porter Settings
     public static boolean enablePorters;
-    public static int porterHireCost;
-    public static int porterMaxMemory;
-    public static int porterScanRadius;
-    public static int porterChatDistance;
-    public static int porterIntroductionTime;
-    public static int porterVisitInterval;
-    public static boolean porterIsChatty;
-    public static int porterMinFoodDelivery;
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
+        // General Worker Settings
+        workersAreChatty = WORKERS_ARE_CHATTY.get();
+        workerMeetingDuration = WORKER_MEETING_DURATION.get();
+        workerChatRadius = WORKER_CHAT_RADIUS.get();
+        workerDetectionRadius = WORKER_DETECTION_RADIUS.get();
+        workerChatBroadcastRange = WORKER_CHAT_BROADCAST_RANGE.get();
+        workerFoodThreshold = WORKER_FOOD_THRESHOLD.get();
+        workerFoodAmount = WORKER_FOOD_AMOUNT.get();
+        containerReachDistance = CONTAINER_REACH_DISTANCE.get();
+        workerAssessmentDistance = WORKER_ASSESSMENT_DISTANCE.get();
+        
+        // Porter Settings
         enablePorters = ENABLE_PORTERS.get();
-        porterHireCost = PORTER_HIRE_COST.get();
-        porterMaxMemory = PORTER_MAX_MEMORY.get();
-        porterScanRadius = PORTER_SCAN_RADIUS.get();
-        porterChatDistance = PORTER_CHAT_DISTANCE.get();
-        porterIntroductionTime = PORTER_INTRODUCTION_TIME.get();
-        porterVisitInterval = PORTER_VISIT_INTERVAL.get();
-        porterIsChatty = PORTER_IS_CHATTY.get();
-        porterMinFoodDelivery = PORTER_MIN_FOOD_DELIVERY.get();
-    }
-
-    public static int getPorterMemoryCapacity(boolean hasBook, boolean hasFeather, boolean hasInk) {
-        if (!hasBook) {
-            return Math.max(1, porterMaxMemory / 4); // Base: 1/4 of max
-        }
-        if (!hasInk) {
-            return Math.max(1, porterMaxMemory / 2); // Book only: 1/2 of max
-        }
-        if (!hasFeather) {
-            return Math.max(1, (porterMaxMemory * 3) / 4); // Book + Ink: 3/4 of max
-        }
-        return porterMaxMemory; // Full kit: max capacity
     }
 }

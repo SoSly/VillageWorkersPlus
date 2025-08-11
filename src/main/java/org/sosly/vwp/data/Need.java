@@ -2,6 +2,7 @@ package org.sosly.vwp.data;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
+import org.sosly.vwp.config.CommonConfig;
 
 import java.util.Map;
 import java.util.function.Predicate;
@@ -50,8 +51,7 @@ public class Need implements ItemPredicate {
 
 
     public static Need food() {
-        // todo: configure food amount in config
-        return new Need(FOOD_MATCHER, 16, Component.translatable("vwp.need.food"));
+        return new Need(FOOD_MATCHER, CommonConfig.workerFoodAmount, Component.translatable("need.vwp.food"));
     }
 
     public static Need item(Item item) {
