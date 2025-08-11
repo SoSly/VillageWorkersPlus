@@ -1,5 +1,12 @@
 # Village Workers Plus
 
+[![Build](https://github.com/SoSly/VillageWorkersPlus/workflows/build/badge.svg)](https://github.com/SoSly/VillageWorkersPlus/actions/workflows/build.yml)
+[![Tests](https://github.com/SoSly/VillageWorkersPlus/workflows/test/badge.svg)](https://github.com/SoSly/VillageWorkersPlus/actions/workflows/test.yml)
+![Minecraft](https://img.shields.io/badge/Minecraft-1.20.1-green)
+![Forge](https://img.shields.io/badge/Forge-47.1.100-orange)
+![License](https://img.shields.io/badge/License-GPLv3-blue)
+![Version](https://img.shields.io/badge/Version-0.1.0--alpha-yellow)
+
 Adds new villager professions and infrastructure systems to make your villages feel more alive and interconnected.
 
 ## Features
@@ -17,7 +24,7 @@ Adds new villager professions and infrastructure systems to make your villages f
 Porters act as the logistical link in your village, delivering resources between other workers.
 
 - Must be assigned to a chest to begin working.
-- Scans up to 80 blocks to find other workers.
+- Scans to find nearby workers.
 - Can remember up to 16 workers (capacity increases with equipment).
 - Once acquainted with another worker, they will:
     1. Visit them regularly to check needs.
