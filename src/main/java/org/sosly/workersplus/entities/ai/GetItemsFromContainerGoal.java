@@ -18,8 +18,6 @@ import org.sosly.workersplus.utils.Worker;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.function.Supplier;
-
 public class GetItemsFromContainerGoal extends AbstractTaskGoal {
     private AbstractWorkerEntity worker;
     private BlockPos pos;
@@ -28,7 +26,7 @@ public class GetItemsFromContainerGoal extends AbstractTaskGoal {
     private int currentNeedIndex = 0;
     private boolean[] attemptedNeeds;
 
-    public GetItemsFromContainerGoal(AbstractWorkerEntity worker, Supplier<AbstractTask<?>> task) {
+    public GetItemsFromContainerGoal(AbstractWorkerEntity worker, AbstractTask<?> task) {
         super(task);
         this.worker = worker;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK));

@@ -13,13 +13,13 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
-    private final Supplier<AbstractWorkerEntity> deliverer;
+    private final AbstractWorkerEntity deliverer;
     private List<Need> needs;
     private AbstractWorkerEntity target;
     private static final String NEEDS = "items";
     private static final String TARGET = "target";
 
-    public DeliveryTask(Supplier<AbstractWorkerEntity> deliverer) {
+    public DeliveryTask(AbstractWorkerEntity deliverer) {
         super(State.class);
         this.deliverer = deliverer;
         reset();
@@ -91,7 +91,7 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
         super.load(tag);
         VillageWorkersPlus.LOGGER.debug("Loading delivery task");
         if (tag.contains(TARGET)) {
-            this.target = (AbstractWorkerEntity) Objects.requireNonNull(deliverer.get().getServer())
+            this.target = (AbstractWorkerEntity) Objects.requireNonNull(deliverer.getServer())
                     .overworld()
                     .getEntity(tag.getUUID(TARGET));
 
@@ -131,7 +131,7 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
         }
 
         private static BlockPos getDelivererHome(DeliveryTask task) {
-            AbstractWorkerEntity deliverer = task.deliverer.get();
+            AbstractWorkerEntity deliverer = task.deliverer;
             if (deliverer == null) {
                 return null;
             }
@@ -147,7 +147,7 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
         }
 
         private static BlockPos getDeliverChest(DeliveryTask task) {
-            AbstractWorkerEntity deliverer = task.deliverer.get();
+            AbstractWorkerEntity deliverer = task.deliverer;
             if (deliverer == null) {
                 return null;
             }

@@ -10,21 +10,20 @@ import org.sosly.workersplus.utils.Chat;
 import org.sosly.workersplus.utils.Worker;
 
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class TargetKnownWorkerGoal extends AbstractTaskGoal {
-    private final Supplier<WorkerRelationships> relationships;
+    private final WorkerRelationships relationships;
     private final AbstractWorkerEntity worker;
     private final boolean useRecencyCheck;
     private final Map<UUID, Long> lastSelectTimes = new HashMap<>();
     private static final long RECENCY_THRESHOLD = 1200L;
 
-    public TargetKnownWorkerGoal(AbstractWorkerEntity worker, Supplier<AbstractTask<?>> task, Supplier<WorkerRelationships> relationships) {
+    public TargetKnownWorkerGoal(AbstractWorkerEntity worker, AbstractTask<?> task, WorkerRelationships relationships) {
         this(worker, task, relationships, true);
     }
 
-    public TargetKnownWorkerGoal(AbstractWorkerEntity worker, Supplier<AbstractTask<?>> task, Supplier<WorkerRelationships> relationships, boolean useRecencyCheck) {
+    public TargetKnownWorkerGoal(AbstractWorkerEntity worker, AbstractTask<?> task, WorkerRelationships relationships, boolean useRecencyCheck) {
         super(task);
         this.relationships = relationships;
         this.worker = worker;
@@ -45,7 +44,7 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
             return false;
         }
 
-        if (relationships.get().getRelationships().isEmpty()) {
+        if (relationships.getRelationships().isEmpty()) {
             return false;
         }
 
@@ -56,7 +55,7 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
     public void start() {
         long currentTime = worker.level().getGameTime();
         
-        List<AbstractWorkerEntity> availableWorkers = relationships.get().getRelationships()
+        List<AbstractWorkerEntity> availableWorkers = relationships.getRelationships()
                 .keySet()
                 .stream()
                 .filter(uuid -> !uuid.equals(worker.getUUID()))

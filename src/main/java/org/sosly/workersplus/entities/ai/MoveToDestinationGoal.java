@@ -8,15 +8,13 @@ import org.sosly.workersplus.tasks.AbstractTask;
 import org.sosly.workersplus.utils.Worker;
 
 import java.util.EnumSet;
-import java.util.function.Supplier;
-
 public class MoveToDestinationGoal extends AbstractTaskGoal {
     private final AbstractWorkerEntity worker;
     private final double distanceThreshold;
     private BlockPos destination;
 
 
-    public MoveToDestinationGoal(AbstractWorkerEntity worker, Supplier<AbstractTask<?>> task, double distanceThreshold) {
+    public MoveToDestinationGoal(AbstractWorkerEntity worker, AbstractTask<?> task, double distanceThreshold) {
         super(task);
         this.worker = worker;
         this.distanceThreshold = distanceThreshold;

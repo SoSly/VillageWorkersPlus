@@ -38,16 +38,13 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class Porter extends AbstractWorkerEntity {
-    private final WorkerRelationships relationships;
-    private final DeliveryTask delivery;
+    private WorkerRelationships relationships;
+    private DeliveryTask delivery;
 
     public Porter(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
         this.setProfessionName("Porter");
         this.cost = CommonConfig.porterCost;
-
-        delivery = new DeliveryTask(() -> this);
-        relationships = new WorkerRelationships();
     }
 
     @Override
@@ -81,23 +78,36 @@ public class Porter extends AbstractWorkerEntity {
         return true;
     }
 
+    protected void registerDependencies() {
+        if (delivery == null) {
+            delivery = new DeliveryTask(this);
+        }
+
+        if (relationships == null) {
+            relationships = new WorkerRelationships();
+        }
+    }
+
     @Override
     protected void registerGoals() {
         super.registerGoals();
 
+        registerDependencies();
+
         // Delivery task goals
-        this.goalSelector.addGoal(3, new PutItemsInContainerGoal(this, () -> delivery));
-        this.goalSelector.addGoal(4, new GetItemsFromContainerGoal(this, () -> delivery));
-        this.goalSelector.addGoal(5, new MoveToDestinationGoal(this, () -> delivery, 2.5D));
-        this.goalSelector.addGoal(6, new AssessWorkerNeedsGoal(this, () -> delivery));
-        this.goalSelector.addGoal(7, new TargetKnownWorkerGoal(this, () -> delivery, () -> relationships));
-        this.goalSelector.addGoal(8, new EndTaskGoal(() -> delivery));
-        this.goalSelector.addGoal(9, new StartTaskGoal(() -> delivery));
+        this.goalSelector.addGoal(3, new PutItemsInContainerGoal(this, delivery));
+        this.goalSelector.addGoal(4, new GetItemsFromContainerGoal(this, delivery));
+        this.goalSelector.addGoal(5, new MoveToDestinationGoal(this, delivery, 2.5D));
+        this.goalSelector.addGoal(6, new AssessWorkerNeedsGoal(this, delivery));
+        this.goalSelector.addGoal(7, new TargetKnownWorkerGoal(this, delivery, relationships));
+        this.goalSelector.addGoal(8, new EndTaskGoal(delivery));
+        this.goalSelector.addGoal(9, new StartTaskGoal(delivery));
 
         // General worker goals
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.3D));
         this.goalSelector.addGoal(12, new ReturnToHomeGoal(this));
-        this.goalSelector.addGoal(15, new MeetNewWorkerGoal(this, () -> relationships));
+        this.goalSelector.addGoal(15, new MeetNewWorkerGoal(this, relationships));
+        this.goalSelector.addGoal(20, new RandomStrollGoal(this, 0.65D, 300));
     }
 
     @Override

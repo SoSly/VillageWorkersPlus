@@ -8,7 +8,9 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public class Need implements ItemPredicate {
-    private static final Predicate<ItemStack> FOOD_MATCHER = stack -> stack.isEdible() && stack.getFoodProperties(null) != null;
+    private static final Predicate<ItemStack> FOOD_MATCHER = stack -> stack.isEdible() &&
+            !stack.is(Items.PUFFERFISH) && stack.getFoodProperties(null) != null &&
+            stack.getFoodProperties(null).getNutrition() > 4;
     private static final Map<Item, Predicate<ItemStack>> TOOL_MATCHERS = Map.of(
             Items.BOW, stack -> stack.getItem() instanceof BowItem,
             Items.CROSSBOW, stack -> stack.getItem() instanceof CrossbowItem,

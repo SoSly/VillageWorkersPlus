@@ -2,10 +2,8 @@ package org.sosly.workersplus.entities.ai;
 
 import org.sosly.workersplus.tasks.AbstractTask;
 
-import java.util.function.Supplier;
-
 public class StartTaskGoal extends AbstractTaskGoal {
-    public StartTaskGoal(Supplier<AbstractTask<?>> task) {
+    public StartTaskGoal(AbstractTask<?> task) {
         super(task);
     }
 

@@ -30,8 +30,7 @@ public class ReturnToHomeGoal extends Goal {
             return false;
         }
 
-        double distance = worker.distanceToSqr(worker.getStartPos().getX(), worker.getStartPos().getY(), worker.getStartPos().getZ());
-        return distance > 30.0; // 15 blocks away
+        return worker.getStartPos().closerToCenterThan(worker.position(), 30.0);
     }
 
     @Override

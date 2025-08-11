@@ -33,15 +33,15 @@ public class Worker {
             return Optional.empty();
         }
 
-        if (worker.inventoryInputHelp().size() < 2) {
-            return Optional.empty();
-        }
-
         return Optional.of(worker.inventoryInputHelp().get(0));
     }
 
     public static Optional<Item> getSecondTool(AbstractWorkerEntity worker) {
         if (worker.inventoryInputHelp() == null || worker.inventoryInputHelp().isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (worker.inventoryInputHelp().size() < 2) {
             return Optional.empty();
         }
 

@@ -16,17 +16,15 @@ import org.sosly.workersplus.utils.Worker;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
-
 public class MeetNewWorkerGoal extends Goal {
-    private final Supplier<WorkerRelationships> relationships;
+    private final WorkerRelationships relationships;
     private final AbstractWorkerEntity worker;
     private long introductionStartTime = 0;
     private long lastScanTime = 0;
     private boolean isIntroducing;
     private boolean isMovingToTarget;
 
-    public MeetNewWorkerGoal(AbstractWorkerEntity worker, Supplier<WorkerRelationships> relationships) {
+    public MeetNewWorkerGoal(AbstractWorkerEntity worker, WorkerRelationships relationships) {
         this.worker = worker;
         this.relationships = relationships;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK, Flag.MOVE));
@@ -128,7 +126,7 @@ public class MeetNewWorkerGoal extends Goal {
         Component name = targetWorker.getName();
         BlockPos targetPos = targetWorker.blockPosition();
         WorkerInfo workerInfo = new WorkerInfo(targetUUID, name, targetPos);
-        relationships.get().addKnown(targetUUID, workerInfo);
+        relationships.addKnown(targetUUID, workerInfo);
 
         Chat.send(worker, Component.translatable("chat.workersplus.meet_new_worker.end", name));
 
@@ -144,7 +142,7 @@ public class MeetNewWorkerGoal extends Goal {
                         target.isAlive() &&
                         target.getOwner() != null &&
                         target.getOwner().equals(worker.getOwner()) &&
-                        !relationships.get().knows(target.getUUID())
+                        !relationships.knows(target.getUUID())
         );
 
         if (nearbyWorkers.isEmpty()) {

@@ -13,12 +13,10 @@ import org.sosly.workersplus.utils.Worker;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
-
 public class AssessWorkerNeedsGoal extends AbstractTaskGoal {
     private final AbstractWorkerEntity worker;
 
-    public AssessWorkerNeedsGoal(AbstractWorkerEntity worker, Supplier<AbstractTask<?>> task) {
+    public AssessWorkerNeedsGoal(AbstractWorkerEntity worker, AbstractTask<?> task) {
         super(task);
         this.worker = worker;
         this.setFlags(EnumSet.of(Goal.Flag.LOOK));

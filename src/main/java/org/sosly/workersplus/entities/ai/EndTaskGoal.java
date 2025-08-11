@@ -3,10 +3,8 @@ package org.sosly.workersplus.entities.ai;
 import org.sosly.workersplus.VillageWorkersPlus;
 import org.sosly.workersplus.tasks.AbstractTask;
 
-import java.util.function.Supplier;
-
 public class EndTaskGoal extends AbstractTaskGoal {
-    public EndTaskGoal(Supplier<AbstractTask<?>> task) {
+    public EndTaskGoal(AbstractTask<?> task) {
         super(task);
     }
 
