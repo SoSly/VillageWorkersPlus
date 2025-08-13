@@ -4,24 +4,24 @@ import com.talhanation.workers.entities.AbstractWorkerEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import org.sosly.workersplus.VillageWorkersPlus;
-import org.sosly.workersplus.data.Need;
+import org.sosly.workersplus.data.Want;
 import org.sosly.workersplus.entities.ai.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 
-public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
-    private final AbstractWorkerEntity deliverer;
-    private List<Need> needs;
+public class CollectionTask extends AbstractTask<CollectionTask.State> {
+    private final AbstractWorkerEntity collector;
+    private List<Want> itemsToCollect;
     private AbstractWorkerEntity target;
-    private static final String NEEDS = "items";
+    private static final String ITEMS = "items";
     private static final String TARGET = "target";
 
-    public DeliveryTask(AbstractWorkerEntity deliverer, TaskCoordinator coordinator) {
+    public CollectionTask(AbstractWorkerEntity collector, TaskCoordinator coordinator) {
         super(State.class, coordinator);
-        this.deliverer = deliverer;
+        this.collector = collector;
         reset();
     }
 
@@ -29,21 +29,22 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
     public void reset() {
         super.reset();
         this.target = null;
+        this.itemsToCollect = new ArrayList<>();
     }
 
     @Override
     public void setData(String key, Object value) {
         switch (key) {
-            case NEEDS -> {
+            case ITEMS -> {
                 if (!(value instanceof List<?> valueList)) {
-                    throw new IllegalArgumentException("needs must be a List<Need>");
+                    throw new IllegalArgumentException("items must be a List<Want>");
                 }
 
-                if (!valueList.stream().allMatch(Need.class::isInstance)) {
-                    throw new IllegalArgumentException("needs must be a List<Need>");
+                if (!valueList.stream().allMatch(Want.class::isInstance)) {
+                    throw new IllegalArgumentException("items must be a List<Want>");
                 }
 
-                this.needs = ((List<Need>) valueList);
+                this.itemsToCollect = new ArrayList<>((List<Want>) valueList);
             }
             case TARGET -> {
                 if (!(value instanceof AbstractWorkerEntity)) {
@@ -59,11 +60,11 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
     @Override
     public Optional<Object> getData(String key) {
         switch (key) {
-            case NEEDS -> {
-                if (needs == null) {
+            case ITEMS -> {
+                if (itemsToCollect == null) {
                     return Optional.empty();
                 }
-                return Optional.of(needs);
+                return Optional.of(itemsToCollect);
             }
             case TARGET -> {
                 if (target == null) {
@@ -89,9 +90,10 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        VillageWorkersPlus.LOGGER.debug("Loading delivery task");
+        VillageWorkersPlus.LOGGER.debug("Loading collection task");
+        
         if (tag.contains(TARGET)) {
-            this.target = (AbstractWorkerEntity) Objects.requireNonNull(deliverer.getServer())
+            this.target = (AbstractWorkerEntity) Objects.requireNonNull(collector.getServer())
                     .overworld()
                     .getEntity(tag.getUUID(TARGET));
 
@@ -103,20 +105,20 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
     }
 
     public enum State implements TaskState {
-        SELECTING_WORKER(new Step(TargetKnownWorkerGoal.class)),
-        NAVIGATING_TO_WORKER(new Step(MoveToDestinationGoal.class,
-                t -> getTargetAt((DeliveryTask) t))),
-        ASSESSING_NEEDS(new Step(AssessWorkerNeedsGoal.class)),
-        GOING_TO_OWN_CHEST(new Step(MoveToDestinationGoal.class,
-                t -> getDeliverChest((DeliveryTask) t))),
+        FINDING_WORKERS(new Step(TargetKnownWorkerGoal.class)),
+        GOING_TO_WORKER(new Step(MoveToDestinationGoal.class,
+                t -> getTargetChest((CollectionTask) t))),
+        ASSESSING_EXCESS(new Step(AssessWorkerExcessGoal.class)),
         COLLECTING_ITEMS(new Step(GetItemsFromContainerGoal.class,
-                t -> getDeliverChest((DeliveryTask) t))),
-        GOING_TO_WORKER_CHEST(new Step(MoveToDestinationGoal.class,
-                t -> getTargetChest((DeliveryTask) t))),
-        DELIVERING_ITEMS(new Step(PutItemsInContainerGoal.class,
-                t -> getTargetChest((DeliveryTask) t))),
-        RETURNING_HOME(new Step(MoveToDestinationGoal.class,
-                t -> getDelivererHome((DeliveryTask) t)))
+                t -> getTargetChest((CollectionTask) t))),
+        VERIFY_COLLECTION(new Step(VerifyCollectionGoal.class)),
+        GOING_TO_CHEST(new Step(MoveToDestinationGoal.class,
+                t -> getCollectorChest((CollectionTask) t))),
+        DEPOSITING_ITEMS(new Step(PutItemsInContainerGoal.class,
+                t -> getCollectorChest((CollectionTask) t))),
+
+        GOING_HOME(new Step(MoveToDestinationGoal.class,
+                t -> getCollectorHome((CollectionTask) t)))
 
         ;
 
@@ -130,31 +132,23 @@ public class DeliveryTask extends AbstractTask<DeliveryTask.State>  {
             return step;
         }
 
-        private static BlockPos getDelivererHome(DeliveryTask task) {
-            AbstractWorkerEntity deliverer = task.deliverer;
-            if (deliverer == null) {
+        private static BlockPos getCollectorHome(CollectionTask task) {
+            AbstractWorkerEntity collector = task.collector;
+            if (collector == null) {
                 return null;
             }
-            return deliverer.getStartPos();
+            return collector.getStartPos();
         }
 
-        private static BlockPos getTargetAt(DeliveryTask task) {
-            AbstractWorkerEntity target = task.target;
-            if (target == null) {
+        private static BlockPos getCollectorChest(CollectionTask task) {
+            AbstractWorkerEntity collector = task.collector;
+            if (collector == null) {
                 return null;
             }
-            return target.blockPosition();
+            return collector.getChestPos();
         }
 
-        private static BlockPos getDeliverChest(DeliveryTask task) {
-            AbstractWorkerEntity deliverer = task.deliverer;
-            if (deliverer == null) {
-                return null;
-            }
-            return deliverer.getChestPos();
-        }
-
-        private static BlockPos getTargetChest(DeliveryTask task) {
+        private static BlockPos getTargetChest(CollectionTask task) {
             AbstractWorkerEntity target = task.target;
             if (target == null) {
                 return null;

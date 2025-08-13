@@ -86,11 +86,13 @@ public class ContainersTests {
         test.assertTrue(Containers.hasItem(chest, predicate), "Chest should still have bread after removing some");
         test.assertTrue(first.getItem() == Items.BREAD, "Removed item should be bread");
         test.assertTrue(first.getCount() == 5, "Removed item count should be 5");
+        test.assertTrue(chest.getItem(0).getCount() == 5, "Chest should have 5 bread remaining after first removal");
 
         ItemStack second = Containers.removeItem(chest, predicate, 5);
         test.assertFalse(Containers.hasItem(chest, predicate), "Chest should not have bread after removing all");
         test.assertTrue(second.getItem() == Items.BREAD, "Removed item should be bread");
         test.assertTrue(second.getCount() == 5, "Removed item count should be 5");
+        test.assertTrue(chest.getItem(0).isEmpty(), "Chest slot should be empty after removing all");
 
         ItemStack third = Containers.removeItem(chest, predicate, 1);
         test.assertTrue(third.isEmpty(), "Removing from empty chest should return empty stack");

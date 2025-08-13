@@ -13,13 +13,15 @@ public abstract class AbstractTask<S extends Enum<S> & TaskState> {
     protected int step = -1;
     protected long stateStartTime;
     protected long taskStartTime;
+    private final TaskCoordinator coordinator;
 
     private final String CURRENT_STEP = "CurrentStep";
     private final String STATE_START_TIME = "StateStartTime";
     private final String TASK_START_TIME = "TaskStartTime";
 
-    public AbstractTask(Class<S> stateClass) {
+    public AbstractTask(Class<S> stateClass, TaskCoordinator coordinator) {
         this.states = stateClass.getEnumConstants();
+        this.coordinator = coordinator;
     }
 
     // ------------------------
@@ -28,6 +30,10 @@ public abstract class AbstractTask<S extends Enum<S> & TaskState> {
     public void next() {
         step++;
         stateStartTime = System.currentTimeMillis();
+        
+        if (complete()) {
+            reset();
+        }
     }
 
     public void previous() {
@@ -58,10 +64,31 @@ public abstract class AbstractTask<S extends Enum<S> & TaskState> {
         return Objects.requireNonNull(current()).getData(this, type);
     }
 
+    public boolean canStart() {
+        return coordinator == null || coordinator.canStartTask(this);
+    }
+    
     public void start() {
+        if (!canStart()) {
+            VillageWorkersPlus.LOGGER.debug("Task {} blocked from starting - another task is active: {}", 
+                this.getClass().getSimpleName(), 
+                coordinator.getActiveTask() != null ? coordinator.getActiveTask().getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        VillageWorkersPlus.LOGGER.debug("Starting task: {}", this.getClass().getSimpleName());
+        
+        if (coordinator != null) {
+            coordinator.setActiveTask(this);
+        }
+        
         taskStartTime = System.currentTimeMillis();
         stateStartTime = taskStartTime;
-        step = 0; // Reset to the first step
+        step = 0;
+    }
+    
+    public boolean isActive() {
+        return step >= 0 && step < states.length;
     }
 
     // ------------------------
@@ -103,6 +130,11 @@ public abstract class AbstractTask<S extends Enum<S> & TaskState> {
     }
 
     public void reset() {
+        if (coordinator != null) {
+            coordinator.clearActiveTask(this);
+        }
+
+        VillageWorkersPlus.LOGGER.debug("Resetting task: {}", this.getClass().getSimpleName());
         step = -1;
         stateStartTime = 0;
         taskStartTime = 0;

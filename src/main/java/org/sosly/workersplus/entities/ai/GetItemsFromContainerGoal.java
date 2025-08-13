@@ -21,7 +21,7 @@ import java.util.List;
 public class GetItemsFromContainerGoal extends AbstractTaskGoal {
     private AbstractWorkerEntity worker;
     private BlockPos pos;
-    private List<ItemPredicate> items;
+    private List<?> items;
     private int lastTicked = 0;
     private int currentNeedIndex = 0;
     private boolean[] attemptedNeeds;
@@ -132,7 +132,12 @@ public class GetItemsFromContainerGoal extends AbstractTaskGoal {
             return;
         }
 
-        ItemPredicate need = items.get(currentNeedIndex);
+        Object item = items.get(currentNeedIndex);
+        if (!(item instanceof ItemPredicate need)) {
+            attemptedNeeds[currentNeedIndex] = true;
+            currentNeedIndex++;
+            return;
+        }
 
         int currentAmount = countItemsInInventory(worker.getInventory(), need);
         int desiredAmount = need.getAmount();
@@ -143,22 +148,29 @@ public class GetItemsFromContainerGoal extends AbstractTaskGoal {
         }
 
         int amountToGet = Math.min(desiredAmount - currentAmount, desiredAmount);
-        ItemStack extracted = Containers.removeItem(chest, need, amountToGet);
-
-        if (extracted.isEmpty()) {
-            attemptedNeeds[currentNeedIndex] = true;
-            currentNeedIndex++;
-            return;
-        }
-
-        ItemStack remainder = worker.getInventory().addItem(extracted);
-        if (!remainder.isEmpty()) {
-            remainder = Containers.putItem(chest, remainder);
-
+        int totalCollected = 0;
+        
+        while (totalCollected < amountToGet && Worker.hasEmptyInventorySlot(worker)) {
+            ItemStack extracted = Containers.removeItem(chest, need, amountToGet - totalCollected);
+            
+            if (extracted.isEmpty()) {
+                break;
+            }
+            
+            totalCollected += extracted.getCount();
+            ItemStack remainder = worker.getInventory().addItem(extracted);
+            
             if (!remainder.isEmpty()) {
-                VillageWorkersPlus.LOGGER.error("Failed to put back remainder: {}", remainder);
+                remainder = Containers.putItem(chest, remainder);
+                if (!remainder.isEmpty()) {
+                    VillageWorkersPlus.LOGGER.error("Failed to put back remainder: {}", remainder);
+                }
+                break;
             }
         }
+        
+        attemptedNeeds[currentNeedIndex] = true;
+        currentNeedIndex++;
     }
 
     private boolean canUseTask() {

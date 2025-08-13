@@ -20,7 +20,7 @@ public class Worker {
             return false;
         }
 
-        return worker.getStatus() != AbstractWorkerEntity.Status.FOLLOW;
+        return worker.getStatus() == AbstractWorkerEntity.Status.WORK;
     }
 
     public static Optional<Container> getChestContainer(AbstractWorkerEntity worker) {

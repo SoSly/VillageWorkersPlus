@@ -5,6 +5,7 @@
   "entity.workersplus.porter": "Porter",
 
   "chat.workersplus.assess_worker_needs.success": "%s needs supplies. Let me go see if I have what they need.",
+  "chat.workersplus.assess_worker_excess.success": "%s has %d excess items. I'll collect them.",
   "chat.workersplus.meet_new_worker.start": "I see someone new!  I should go say hello.",
   "chat.workersplus.meet_new_worker.end": "I learned a little about %s.",
   "chat.workersplus.selecting_worker.failure": "I haven't seen %s in a while...",

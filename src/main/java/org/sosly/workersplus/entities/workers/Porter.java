@@ -31,7 +31,9 @@ import org.sosly.workersplus.networking.PacketHandler;
 import org.sosly.workersplus.networking.clientbound.UpdateHireScreen;
 import org.sosly.workersplus.networking.serverbound.OpenHireGUI;
 import org.sosly.workersplus.networking.serverbound.OpenWorkerGUI;
+import org.sosly.workersplus.tasks.CollectionTask;
 import org.sosly.workersplus.tasks.DeliveryTask;
+import org.sosly.workersplus.tasks.TaskCoordinator;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -40,6 +42,8 @@ import java.util.function.Predicate;
 public class Porter extends AbstractWorkerEntity {
     private WorkerRelationships relationships;
     private DeliveryTask delivery;
+    private CollectionTask collection;
+    private TaskCoordinator taskCoordinator;
 
     public Porter(EntityType<? extends AbstractWorkerEntity> entityType, Level world) {
         super(entityType, world);
@@ -56,6 +60,9 @@ public class Porter extends AbstractWorkerEntity {
 
         CompoundTag deliveryData = this.delivery.save();
         nbt.put("delivery", deliveryData);
+
+        CompoundTag collectionData = this.collection.save();
+        nbt.put("collection", collectionData);
     }
 
     @Override
@@ -71,6 +78,11 @@ public class Porter extends AbstractWorkerEntity {
             CompoundTag deliveryData = nbt.getCompound("delivery");
             this.delivery.load(deliveryData);
         }
+
+        if (nbt.contains("collection")) {
+            CompoundTag collectionData = nbt.getCompound("collection");
+            this.collection.load(collectionData);
+        }
     }
 
     @Override
@@ -79,8 +91,16 @@ public class Porter extends AbstractWorkerEntity {
     }
 
     protected void registerDependencies() {
+        if (taskCoordinator == null) {
+            taskCoordinator = new TaskCoordinator();
+        }
+        
         if (delivery == null) {
-            delivery = new DeliveryTask(this);
+            delivery = new DeliveryTask(this, taskCoordinator);
+        }
+
+        if (collection == null) {
+            collection = new CollectionTask(this, taskCoordinator);
         }
 
         if (relationships == null) {
@@ -95,19 +115,29 @@ public class Porter extends AbstractWorkerEntity {
         registerDependencies();
 
         // Delivery task goals
-        this.goalSelector.addGoal(3, new PutItemsInContainerGoal(this, delivery));
-        this.goalSelector.addGoal(4, new GetItemsFromContainerGoal(this, delivery));
+        this.goalSelector.addGoal(10, new StartTaskGoal(this, collection));
+        this.goalSelector.addGoal(5, new PutItemsInContainerGoal(this, delivery));
+        this.goalSelector.addGoal(5, new GetItemsFromContainerGoal(this, delivery));
         this.goalSelector.addGoal(5, new MoveToDestinationGoal(this, delivery, 2.5D));
-        this.goalSelector.addGoal(6, new AssessWorkerNeedsGoal(this, delivery));
-        this.goalSelector.addGoal(7, new TargetKnownWorkerGoal(this, delivery, relationships));
-        this.goalSelector.addGoal(8, new EndTaskGoal(delivery));
-        this.goalSelector.addGoal(9, new StartTaskGoal(delivery));
+        this.goalSelector.addGoal(5, new AssessWorkerNeedsGoal(this, delivery));
+        this.goalSelector.addGoal(5, new TargetKnownWorkerGoal(this, delivery, relationships));
+        this.goalSelector.addGoal(10, new EndTaskGoal(delivery));
 
-        // General worker goals
+        // Collection task goals
+        this.goalSelector.addGoal(10, new StartTaskGoal(this, delivery));
+        this.goalSelector.addGoal(5, new PutItemsInContainerGoal(this, collection));
+        this.goalSelector.addGoal(5, new GetItemsFromContainerGoal(this, collection));
+        this.goalSelector.addGoal(5, new VerifyCollectionGoal(this, collection));
+        this.goalSelector.addGoal(5, new MoveToDestinationGoal(this, collection, 2.5D));
+        this.goalSelector.addGoal(5, new AssessWorkerExcessGoal(this, collection));
+        this.goalSelector.addGoal(5, new TargetKnownWorkerGoal(this, collection, relationships));
+        this.goalSelector.addGoal(10, new EndTaskGoal(collection));
+
+        // General worker goals (lowest priority)
         this.goalSelector.addGoal(1, new PanicGoal(this, 1.3D));
-        this.goalSelector.addGoal(12, new ReturnToHomeGoal(this));
-        this.goalSelector.addGoal(15, new MeetNewWorkerGoal(this, relationships));
-        this.goalSelector.addGoal(20, new RandomStrollGoal(this, 0.65D, 300));
+        this.goalSelector.addGoal(30, new ReturnToHomeGoal(this));
+        this.goalSelector.addGoal(35, new MeetNewWorkerGoal(this, relationships));
+        this.goalSelector.addGoal(40, new RandomStrollGoal(this, 0.65D, 300));
     }
 
     @Override
