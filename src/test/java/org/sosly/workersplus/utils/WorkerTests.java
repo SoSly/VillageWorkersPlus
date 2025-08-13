@@ -5,13 +5,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.Tags;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 import org.jetbrains.annotations.NotNull;
@@ -31,13 +29,14 @@ public class WorkerTests {
 
     @GameTest(template = "empty", batch = BATCH, attempts = 3, requiredSuccesses = 3)
     public static void testCanWork(final @NotNull GameTestHelper test) {
-        Porter worker = test.spawn(EntityTypes.PORTER.get(), 1, 2, 1);
+        Porter worker = test.spawnWithNoFreeWill(EntityTypes.PORTER.get(), 1, 2, 1);
         
         test.assertTrue(Worker.canWork(worker), "Worker should be able to work when alive and not following");
         
         worker.setStatus(AbstractWorkerEntity.Status.FOLLOW);
         test.assertFalse(Worker.canWork(worker), "Worker should not be able to work when following");
-        
+
+        worker.setStartPos(test.absolutePos(new BlockPos(1, 2, 1)));
         worker.setStatus(AbstractWorkerEntity.Status.WORK);
         test.assertTrue(Worker.canWork(worker), "Worker should be able to work when status is WORK");
         
@@ -48,7 +47,7 @@ public class WorkerTests {
 
     @GameTest(template = "empty", batch = BATCH, attempts = 3, requiredSuccesses = 3)
     public static void testGetChestContainer(final @NotNull GameTestHelper test) {
-        Porter worker = test.spawn(EntityTypes.PORTER.get(), 1, 2, 1);
+        Porter worker = test.spawnWithNoFreeWill(EntityTypes.PORTER.get(), 1, 2, 1);
         BlockPos chestPos = new BlockPos(0, 1, 0);
         
         test.setBlock(chestPos, Blocks.CHEST);
