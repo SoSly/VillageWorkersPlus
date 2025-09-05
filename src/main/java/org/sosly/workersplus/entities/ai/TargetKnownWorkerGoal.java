@@ -20,6 +20,7 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
     private final boolean useRecencyCheck;
     private final Map<UUID, Long> lastSelectTimes = new HashMap<>();
     private static final long RECENCY_THRESHOLD = 1200L;
+    private AbstractWorkerEntity selectedTarget = null;
 
     public TargetKnownWorkerGoal(AbstractWorkerEntity worker, AbstractTask<?> task, WorkerRelationships relationships) {
         this(worker, task, relationships, true);
@@ -46,64 +47,72 @@ public class TargetKnownWorkerGoal extends AbstractTaskGoal {
             return false;
         }
 
-        if (relationships.getRelationships().isEmpty()) {
+        if (!getTask().isCurrentStep(this)) {
             return false;
         }
 
-        return getTask().isCurrentStep(this);
+        if (relationships.getRelationships().isEmpty()) {
+            getTask().reset();
+            return false;
+        }
+        
+        selectedTarget = findValidTarget();
+        if (selectedTarget == null) {
+            getTask().reset();
+            return false;
+        }
+        return true;
     }
 
     @Override
     public void start() {
+        if (selectedTarget == null) {
+            getTask().reset();
+            return;
+        }
+
+        if (useRecencyCheck) {
+            lastSelectTimes.put(selectedTarget.getUUID(), worker.level().getGameTime());
+        }
+
+        getTask().setData("target", selectedTarget);
+        Chat.send(worker, Component.translatable("chat.workersplus.selecting_worker.success", selectedTarget.getName()));
+        getTask().next();
+        
+        selectedTarget = null;
+    }
+
+    private AbstractWorkerEntity findValidTarget() {
         long currentTime = worker.level().getGameTime();
         
-        List<UUID> knownWorkerIds = relationships.getRelationships()
+        List<UUID> candidates = relationships.getRelationships()
                 .keySet()
                 .stream()
                 .filter(uuid -> !uuid.equals(worker.getUUID()))
                 .filter(uuid -> !useRecencyCheck || !isRecentlySelected(uuid, currentTime))
                 .collect(Collectors.toList());
 
-        if (knownWorkerIds.isEmpty()) {
-            getTask().reset();
-            return;
+        if (candidates.isEmpty()) {
+            return null;
         }
-
-        AbstractWorkerEntity target = null;
-        UUID selectedId = null;
         
-        while (!knownWorkerIds.isEmpty() && target == null) {
-            selectedId = knownWorkerIds.get(worker.getRandom().nextInt(knownWorkerIds.size()));
-            
-            AbstractWorkerEntity entity = (AbstractWorkerEntity) worker.getServer().overworld().getEntity(selectedId);
-            
-            if (entity != null && entity.isAlive() && 
-                worker.distanceToSqr(entity) <= CommonConfig.workerDetectionRadius * CommonConfig.workerDetectionRadius) {
-                if (Worker.canWork(entity)) {
-                    target = entity;
-                }
-            } else {
-                WorkerInfo forgottenWorker = relationships.getRelationships().get(selectedId);
-                if (forgottenWorker != null) {
-                    Chat.send(worker, Component.translatable("chat.workersplus.selecting_worker.failure", forgottenWorker.getName()));
-                    relationships.removeKnown(selectedId);
-                }
-                knownWorkerIds.remove(selectedId);
+        UUID selectedId = candidates.get(worker.getRandom().nextInt(candidates.size()));
+        AbstractWorkerEntity entity = (AbstractWorkerEntity) worker.getServer().overworld().getEntity(selectedId);
+        
+        if (entity == null || !entity.isAlive()) {
+            WorkerInfo forgottenWorker = relationships.getRelationships().get(selectedId);
+            if (forgottenWorker != null) {
+                Chat.send(worker, Component.translatable("chat.workersplus.selecting_worker.failure", forgottenWorker.getName()));
+                relationships.removeKnown(selectedId);
             }
+            return null;
         }
-
-        if (target == null) {
-            getTask().reset();
-            return;
+        
+        if (worker.distanceToSqr(entity) > CommonConfig.workerDetectionRadius * CommonConfig.workerDetectionRadius) {
+            return null;
         }
-
-        if (useRecencyCheck) {
-            lastSelectTimes.put(target.getUUID(), currentTime);
-        }
-
-        getTask().setData("target", target);
-        getTask().next();
-        Chat.send(worker, Component.translatable("chat.workersplus.selecting_worker.success", target.getName()));
+        
+        return entity;
     }
 
     private boolean isRecentlySelected(UUID workerId, long currentTime) {
