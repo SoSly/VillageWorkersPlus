@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 public class Worker {
     public static boolean canWork(@Nullable AbstractWorkerEntity worker) {
@@ -51,15 +52,14 @@ public class Worker {
     public static List<Need> getNeeds(AbstractWorkerEntity worker) {
         List<Need> needs = new ArrayList<>();
 
-        if (worker.needsMainTool) {
+        if (worker.hasAMainTool() && !hasToolInInventory(worker, worker::isRequiredMainTool)) {
             getMainTool(worker).ifPresent(tool -> needs.add(Need.item(tool)));
         }
 
-        if (worker.needsSecondTool) {
+        if (worker.hasASecondTool() && !hasToolInInventory(worker, worker::isRequiredSecondTool)) {
             getSecondTool(worker).ifPresent(tool -> needs.add(Need.item(tool)));
         }
 
-        // calculate food needs
         AtomicInteger food = new AtomicInteger(countFoodInContainer(worker.getInventory()));
         getChestContainer(worker)
                 .ifPresent(container -> food.addAndGet(countFoodInContainer(container)));
@@ -69,6 +69,21 @@ public class Worker {
         }
 
         return needs;
+    }
+
+    private static boolean hasToolInInventory(AbstractWorkerEntity worker, Predicate<ItemStack> toolMatcher) {
+        if (worker.getInventory() == null) {
+            return false;
+        }
+
+        for (int i = 0; i < worker.getInventory().getContainerSize(); i++) {
+            ItemStack stack = worker.getInventory().getItem(i);
+            if (!stack.isEmpty() && toolMatcher.test(stack)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public static boolean hasEmptyInventorySlot(AbstractWorkerEntity worker) {
