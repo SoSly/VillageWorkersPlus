@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fixed infinite loop in TargetKnownWorkerGoal when workers couldn't be selected
 - fixed porters being unable to target workers who need help (hungry/toolless workers)
 - fixed porters not detecting missing tools when workers lose them (now checks inventory directly)
+- fixed porters only checking half of double chests when assessing worker excess items
 
 ## 0.1.0-alpha
 

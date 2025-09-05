@@ -11,7 +11,7 @@ Adds new villager professions and infrastructure systems to make your villages f
 
 ## Features
 - New Worker Professions!
-- 
+
 ## New Professions
 
 ### Porters

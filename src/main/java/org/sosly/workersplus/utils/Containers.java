@@ -4,7 +4,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import org.sosly.workersplus.data.ItemPredicate;
 
 import java.util.Optional;
@@ -30,11 +33,22 @@ public class Containers {
         }
 
         BlockEntity entity = level.getBlockEntity(pos);
-        if (!(entity instanceof Container container)) {
-            return Optional.empty();
+        
+        if (entity instanceof ChestBlockEntity) {
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof ChestBlock chestBlock) {
+                Container chestContainer = ChestBlock.getContainer(chestBlock, state, level, pos, true);
+                if (chestContainer != null) {
+                    return Optional.of(chestContainer);
+                }
+            }
+        }
+        
+        if (entity instanceof Container container) {
+            return Optional.of(container);
         }
 
-        return Optional.of(container);
+        return Optional.empty();
     }
 
     public static ItemStack putItem(Container container, ItemStack stack) {

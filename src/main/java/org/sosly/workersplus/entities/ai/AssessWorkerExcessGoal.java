@@ -53,7 +53,7 @@ public class AssessWorkerExcessGoal extends AbstractTaskGoal {
             return false;
         }
 
-        return getTask().getTimeInState() > 3000;
+        return getTask().getTimeInState() < 3000;
     }
 
     @Override
@@ -103,8 +103,13 @@ public class AssessWorkerExcessGoal extends AbstractTaskGoal {
                 continue;
             }
 
-            if (!target.wantsToKeep(stack)) {
+            boolean wantsIt = target.wantsToKeep(stack);
+            VillageWorkersPlus.LOGGER.info("Slot {}: {} x{}, worker wants: {}", 
+                i, stack.getItem(), stack.getCount(), wantsIt);
+
+            if (!wantsIt) {
                 itemsToCollect.add(new Want(stack));
+                VillageWorkersPlus.LOGGER.info("  -> Marked as excess (unwanted)");
             } else if (stack.isStackable()) {
                 String itemKey = stack.getItem().toString();
                 int currentCount = wantedItemCounts.getOrDefault(itemKey, 0);
@@ -124,6 +129,7 @@ public class AssessWorkerExcessGoal extends AbstractTaskGoal {
             }
         }
 
+        VillageWorkersPlus.LOGGER.info("Total excess items identified: {}", itemsToCollect.size());
         return itemsToCollect;
     }
 

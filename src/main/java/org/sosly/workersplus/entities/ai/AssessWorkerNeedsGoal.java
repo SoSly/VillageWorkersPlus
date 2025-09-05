@@ -48,7 +48,7 @@ public class AssessWorkerNeedsGoal extends AbstractTaskGoal {
         }
 
         // todo: use a configuration option for the timeout
-        return getTask().getTimeInState() > 3000;
+        return getTask().getTimeInState() < 3000;
     }
 
     @Override

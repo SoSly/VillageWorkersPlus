@@ -100,4 +100,68 @@ public class ContainersTests {
 
         test.succeed();
     }
+
+    @GameTest(template = "empty", batch = BATCH, attempts = 3, requiredSuccesses = 3)
+    public static void testDoubleChestHandling(final GameTestHelper test) {
+        BlockPos leftChestPos = new BlockPos(0, 1, 0);
+        BlockPos rightChestPos = new BlockPos(1, 1, 0);
+        
+        test.setBlock(leftChestPos, Blocks.CHEST.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.ChestBlock.TYPE, 
+                         net.minecraft.world.level.block.state.properties.ChestType.LEFT)
+                .setValue(net.minecraft.world.level.block.ChestBlock.FACING, 
+                         net.minecraft.core.Direction.NORTH));
+        test.setBlock(rightChestPos, Blocks.CHEST.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.ChestBlock.TYPE, 
+                         net.minecraft.world.level.block.state.properties.ChestType.RIGHT)
+                .setValue(net.minecraft.world.level.block.ChestBlock.FACING, 
+                         net.minecraft.core.Direction.NORTH));
+
+        Container leftContainer = Containers.getFromBlockPos(test.absolutePos(leftChestPos), test.getLevel()).orElse(null);
+        Container rightContainer = Containers.getFromBlockPos(test.absolutePos(rightChestPos), test.getLevel()).orElse(null);
+        
+        test.assertTrue(leftContainer != null, "Left chest container not found");
+        test.assertTrue(rightContainer != null, "Right chest container not found");
+        assert leftContainer != null;
+        assert rightContainer != null;
+        
+        // Double chest should have 54 slots total
+        test.assertTrue(leftContainer.getContainerSize() == 54, 
+                "Double chest accessed from left should have 54 slots, got: " + leftContainer.getContainerSize());
+        test.assertTrue(rightContainer.getContainerSize() == 54, 
+                "Double chest accessed from right should have 54 slots, got: " + rightContainer.getContainerSize());
+        
+        // Test that items placed in first half are visible from both sides
+        ItemStack bread = new ItemStack(Items.BREAD, 32);
+        leftContainer.setItem(0, bread.copy());
+        
+        test.assertTrue(rightContainer.getItem(0).getItem() == Items.BREAD, 
+                "Item placed in left chest should be visible from right chest");
+        test.assertTrue(rightContainer.getItem(0).getCount() == 32, 
+                "Item count should match when accessed from right chest");
+        
+        // Test that items placed in second half are visible from both sides
+        ItemStack apples = new ItemStack(Items.APPLE, 16);
+        rightContainer.setItem(27, apples.copy());
+        
+        test.assertTrue(leftContainer.getItem(27).getItem() == Items.APPLE, 
+                "Item placed in right chest half should be visible from left chest");
+        test.assertTrue(leftContainer.getItem(27).getCount() == 16, 
+                "Item count should match when accessed from left chest");
+        
+        // Test Containers utility methods work across both halves
+        ItemPredicate breadPredicate = new Need(stack -> stack.getItem() == Items.BREAD, 32, bread.getDisplayName());
+        ItemPredicate applePredicate = new Need(stack -> stack.getItem() == Items.APPLE, 16, apples.getDisplayName());
+        
+        test.assertTrue(Containers.hasItem(leftContainer, breadPredicate), 
+                "Should find bread in first half when accessing from left");
+        test.assertTrue(Containers.hasItem(leftContainer, applePredicate), 
+                "Should find apples in second half when accessing from left");
+        test.assertTrue(Containers.hasItem(rightContainer, breadPredicate), 
+                "Should find bread in first half when accessing from right");
+        test.assertTrue(Containers.hasItem(rightContainer, applePredicate), 
+                "Should find apples in second half when accessing from right");
+        
+        test.succeed();
+    }
 }

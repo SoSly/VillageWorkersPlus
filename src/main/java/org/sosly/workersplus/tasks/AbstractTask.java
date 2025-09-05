@@ -41,6 +41,23 @@ public abstract class AbstractTask<S extends Enum<S> & TaskState> {
         stateStartTime = System.currentTimeMillis();
     }
 
+    protected void skipToStep(int targetStep) {
+        if (targetStep >= 0 && targetStep < states.length) {
+            step = targetStep;
+            stateStartTime = System.currentTimeMillis();
+        }
+    }
+
+    protected <S extends Enum<S> & TaskState> void skipToState(S targetState) {
+        S[] allStates = (S[]) states;
+        for (int i = 0; i < allStates.length; i++) {
+            if (allStates[i] == targetState) {
+                skipToStep(i);
+                break;
+            }
+        }
+    }
+
     @Nullable
     public TaskState.Step current() {
         if (step < 0 || step >= states.length) {

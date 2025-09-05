@@ -30,15 +30,19 @@ public class WorkerTests {
     @GameTest(template = "empty", batch = BATCH, attempts = 3, requiredSuccesses = 3)
     public static void testCanWork(final @NotNull GameTestHelper test) {
         Porter worker = test.spawnWithNoFreeWill(EntityTypes.PORTER.get(), 1, 2, 1);
+        worker.setStartPos(test.absolutePos(new BlockPos(1, 2, 1)));
         
-        test.assertTrue(Worker.canWork(worker), "Worker should be able to work when alive and not following");
+        worker.setStatus(AbstractWorkerEntity.Status.WORK);
+        test.assertTrue(Worker.canWork(worker), "Worker should be able to work when status is WORK");
         
         worker.setStatus(AbstractWorkerEntity.Status.FOLLOW);
         test.assertFalse(Worker.canWork(worker), "Worker should not be able to work when following");
+        
+        worker.setStatus(AbstractWorkerEntity.Status.WANDER);
+        test.assertFalse(Worker.canWork(worker), "Worker should not be able to work when wandering");
 
-        worker.setStartPos(test.absolutePos(new BlockPos(1, 2, 1)));
         worker.setStatus(AbstractWorkerEntity.Status.WORK);
-        test.assertTrue(Worker.canWork(worker), "Worker should be able to work when status is WORK");
+        test.assertTrue(Worker.canWork(worker), "Worker should be able to work when status is back to WORK");
         
         test.assertFalse(Worker.canWork(null), "Null worker should not be able to work");
         
@@ -207,6 +211,8 @@ public class WorkerTests {
 
     private static class MockWorker extends Porter {
         public List<Item> tools = null;
+        public boolean needsMainTool = false;
+        public boolean needsSecondTool = false;
         
         public MockWorker(GameTestHelper test) {
             super(EntityTypes.PORTER.get(), test.getLevel());
@@ -216,6 +222,16 @@ public class WorkerTests {
         @Override
         public List<Item> inventoryInputHelp() {
             return tools;
+        }
+        
+        @Override
+        public boolean hasAMainTool() {
+            return needsMainTool;
+        }
+        
+        @Override
+        public boolean hasASecondTool() {
+            return needsSecondTool;
         }
     }
 }
